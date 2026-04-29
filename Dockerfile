@@ -27,6 +27,16 @@ RUN apt-get update \
 RUN npm install -g @openai/codex@latest \
   && codex --version >/tmp/codex-version
 
+# Install additional coding agents based on build-arg (comma-separated list)
+# Available agents:
+#   - @anthropic-ai/claude-code (Claude Code by Anthropic)
+#   - @google/gemini-cli (Gemini CLI by Google)
+# Example: --build-arg CODING_AGENTS=@anthropic-ai/claude-code,@google/gemini-cli
+ARG CODING_AGENTS=
+RUN if [ -n "$CODING_AGENTS" ]; then \
+       npm install -g $CODING_AGENTS; \
+    fi
+
 # Install vibe-kanban at build time (not runtime)
 # This ensures the Docker image digest changes when a new version is released,
 # which enables UnRAID's "Update Available" detection

@@ -10,6 +10,11 @@ on:
         required: false
         default: "false"
         type: boolean
+      coding_agents:
+        description: "Additional coding agents (space-separated)"
+        required: false
+        default: ""
+        type: string
 
 env:
   NPM_PACKAGE: vibe-kanban
@@ -95,6 +100,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             VIBE_VERSION=${{ needs.check-upstream.outputs.npm_version }}
+            CODING_AGENTS=${{ github.event.inputs.coding_agents }}
 
       - name: Configure git identity
         run: |

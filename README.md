@@ -57,6 +57,33 @@ Build the base image once (`docker build -t vibe-kanban:base -f Dockerfile .`), 
 
 ## 🔑 Integrations & Credentials
 
+### Coding Agents
+
+This image includes **OpenAI Codex** by default. Additional coding agents can be installed at build time using the `CODING_AGENTS` build argument:
+
+```dockerfile
+# Build with additional agents
+docker build --build-arg "CODING_AGENTS=@anthropic-ai/claude-code @google/gemini-cli" .
+```
+
+Or in docker-compose:
+```yaml
+build:
+  context: .
+  args:
+    CODING_AGENTS: "@anthropic-ai/claude-code @google/gemini-cli"
+```
+
+#### Available Coding Agents
+
+| Package | Agent | Provider |
+|---------|-------|----------|
+| `@openai/codex` | Codex | OpenAI (installed by default) |
+| `@anthropic-ai/claude-code` | Claude Code | Anthropic |
+| `@google/gemini-cli` | Gemini CLI | Google |
+
+Each agent requires its own authentication. After building, authenticate on the host and the credentials will be mounted into the container.
+
 ### OpenAI Codex
 
 1. Authenticate on the host (once):

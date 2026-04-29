@@ -76,7 +76,7 @@ fi
 
 echo "[startup] Tool installation complete."
 
-# Display welcome message
+# Display welcome message with dynamic content based on installed tools
 echo ""
 echo "========================================"
 echo "  Vibe Kanban Docker - Welcome!"
@@ -96,15 +96,39 @@ fi
 echo ""
 echo "Getting Started:"
 echo "  - Access the app at: http://localhost:8085"
-echo "  - To use a coding agent, run: vibe-kanban"
-echo "  - To start vibe-kanban manually: bash -lc vibe-kanban"
+echo "  - To start vibe-kanban: bash -lc vibe-kanban"
+echo ""
+echo "Agent Commands:"
+echo "  - Claude Code: claude"
+if [ -n "$RUNTIME_AGENTS" ]; then
+    echo "  - Available agents: $RUNTIME_AGENTS"
+fi
 echo ""
 echo "Configuration Locations:"
 echo "  - Vibe Kanban data: /home/node/.local/share/vibe-kanban"
 echo "  - Codex config: ~/.codex"
 echo "  - GitHub CLI: ~/.config/gh"
-echo "  - Playwright config: ./playwright.config.ts"
-echo "  - Vitest config: ./vitest.config.ts"
+if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
+    echo "  - Playwright config: ./playwright.config.ts"
+fi
+if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
+    echo "  - Vitest config: ./vitest.config.ts"
+    echo ""
+    echo "Testing Commands:"
+    if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
+        echo "  - Vitest: npx vitest run"
+    fi
+    if echo "$RUNTIME_TESTING_TOOLS" | grep -q "jest"; then
+        echo "  - Jest: npx jest"
+    fi
+fi
+if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
+    echo ""
+    echo "Playwright Commands:"
+    echo "  - Run tests: npx playwright test"
+    echo "  - Run single browser: npx playwright test --project=chromium"
+    echo "  - View report: npx playwright show-report"
+fi
 echo ""
 echo "For more info: https://github.com/rorar/vibe-kanban-docker"
 echo "========================================"

@@ -163,16 +163,27 @@ echo ""
 echo "Documentation:"
 echo "  - Vibe Kanban: https://vibekanban.com/docs"
 echo "  - Codex: https://developers.openai.com/codex"
-echo "  - Claude Code: https://code.claude.com"
-echo "  - Gemini CLI: https://geminicli.com/docs"
-echo "  - GitHub Copilot: https://docs.github.com/en/copilot"
-echo "  - Amp: https://ampcode.com/manual"
-echo "  - Cursor: https://cursor.com/docs/cli"
-echo "  - OpenCode: https://opencode.ai/docs"
-echo "  - Qwen Code: https://qwenlm.github.io/qwen-code-docs"
-echo "  - CCR: https://github.com/musistudio/claude-code-router"
-echo "  - Playwright: https://playwright.dev/docs"
-echo "  - Vitest: https://vitest.dev/guide"
+if [ -n "$RUNTIME_AGENTS" ]; then
+    for agent in $(echo "$RUNTIME_AGENTS" | sed 's/,/ /g'); do
+        case "$agent" in
+            claude)        echo "  - Claude Code: https://code.claude.com" ;;
+            gemini)        echo "  - Gemini CLI: https://geminicli.com/docs" ;;
+            copilot)       echo "  - GitHub Copilot: https://docs.github.com/en/copilot" ;;
+            amp)           echo "  - Amp: https://ampcode.com/manual" ;;
+            cursor)        echo "  - Cursor: https://cursor.com/docs/cli" ;;
+            opencode)      echo "  - OpenCode: https://opencode.ai/docs" ;;
+            droid)         echo "  - Droid: https://docs.factory.ai" ;;
+            clauderouter)  echo "  - CCR: https://github.com/musistudio/claude-code-router" ;;
+            qwen)          echo "  - Qwen Code: https://qwenlm.github.io/qwen-code-docs" ;;
+        esac
+    done
+fi
+if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
+    echo "  - Playwright: https://playwright.dev/docs"
+fi
+if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
+    echo "  - Vitest: https://vitest.dev/guide"
+fi
 echo ""
 echo "For more info: https://github.com/rorar/vibe-kanban-docker"
 echo "========================================"

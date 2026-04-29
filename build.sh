@@ -42,6 +42,7 @@ done
 
 # Build Playwright browsers string from .env variable
 PLAYWRIGHT_BROWSERS="${PLAYWRIGHT_BROWSERS:-}"
+PLAYWRIGHT_PROJECTS="${PLAYWRIGHT_PROJECTS:-}"
 
 echo "Building with agents: ${AGENTS:-none (default Codex only)}"
 echo "Building with Playwright browsers: ${PLAYWRIGHT_BROWSERS:-none}"
@@ -56,6 +57,7 @@ fi
 DOCKER_BUILDKIT=1 docker build \
     --build-arg "CODING_AGENTS=$AGENTS" \
     --build-arg "PLAYWRIGHT_BROWSERS=$PLAYWRIGHT_BROWSERS" \
+    --build-arg "PLAYWRIGHT_PROJECTS=$PLAYWRIGHT_PROJECTS" \
     -t ghcr.io/rorar/vibe-kanban-docker:latest \
     -t ghcr.io/rorar/vibe-kanban-docker:local \
     $PUSH_FLAG \

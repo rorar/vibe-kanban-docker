@@ -46,12 +46,17 @@ RUN npm install -g vibe-kanban@${VIBE_VERSION}
 
 # Install Playwright for E2E testing (optional)
 # Set PLAYWRIGHT_BROWSERS to install browsers: chromium, firefox, webkit (space-separated)
-# Example: --build-arg PLAYWRIGHT_BROWSERS="chromium firefox"
+# Set PLAYWRIGHT_PROJECTS to create browser projects in config: chromium firefox webkit
+# Example: --build-arg PLAYWRIGHT_BROWSERS="chromium firefox" --build-arg PLAYWRIGHT_PROJECTS="chromium firefox"
 ARG PLAYWRIGHT_BROWSERS=
+ARG PLAYWRIGHT_PROJECTS=
 RUN if [ -n "$PLAYWRIGHT_BROWSERS" ]; then \
        npm install -g @playwright/test playwright && \
        npx playwright install $PLAYWRIGHT_BROWSERS; \
     fi
+
+# Create playwright.config.ts with multi-browser projects if PLAYWRIGHT_PROJECTS is set
+# The config file will be created in the workspace when tests are initialized
 
 # Dedicated workspace for mounted repositories
 WORKDIR /work

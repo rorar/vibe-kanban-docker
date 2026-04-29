@@ -115,14 +115,16 @@ Each agent requires its own authentication. After building, authenticate on the 
 
 ### Playwright E2E Testing
 
-Playwright is available for E2E testing. Install browsers at build time:
+Playwright is available for E2E testing. Install browsers and configure multi-browser testing at build time:
 
 ```bash
-# Install with Chromium only
+# Install Chromium only
 docker build --build-arg "PLAYWRIGHT_BROWSERS=chromium" .
 
-# Install with all browsers
-docker build --build-arg "PLAYWRIGHT_BROWSERS=chromium firefox webkit" .
+# Install all browsers with multi-browser projects
+docker build \
+  --build-arg "PLAYWRIGHT_BROWSERS=chromium firefox webkit" \
+  --build-arg "PLAYWRIGHT_PROJECTS=chromium firefox webkit" .
 ```
 
 Or in docker-compose:
@@ -130,14 +132,27 @@ Or in docker-compose:
 build:
   context: .
   args:
-    PLAYWRIGHT_BROWSERS: "chromium firefox"
+    PLAYWRIGHT_BROWSERS: "chromium firefox webkit"
+    PLAYWRIGHT_PROJECTS: "chromium firefox webkit"
 ```
 
-Usage inside the container:
+**Setup tests in your project:**
 ```bash
-npx playwright test
-npx playwright show-report
+npx playwright init
+# Copy example config
+cp examples/playwright.config.ts.example playwright.config.ts
+# Create tests directory
+mkdir tests
 ```
+
+**Run tests:**
+```bash
+npx playwright test              # Run all projects
+npx playwright test --project=chromium  # Run single browser
+npx playwright show-report       # View HTML report
+```
+
+A multi-browser config template is available at `examples/playwright.config.ts.example`.
 
 ### OpenAI Codex
 

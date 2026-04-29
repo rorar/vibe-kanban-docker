@@ -113,6 +113,32 @@ build:
 
 Each agent requires its own authentication. After building, authenticate on the host and the credentials will be mounted into the container.
 
+### Playwright E2E Testing
+
+Playwright is available for E2E testing. Install browsers at build time:
+
+```bash
+# Install with Chromium only
+docker build --build-arg "PLAYWRIGHT_BROWSERS=chromium" .
+
+# Install with all browsers
+docker build --build-arg "PLAYWRIGHT_BROWSERS=chromium firefox webkit" .
+```
+
+Or in docker-compose:
+```yaml
+build:
+  context: .
+  args:
+    PLAYWRIGHT_BROWSERS: "chromium firefox"
+```
+
+Usage inside the container:
+```bash
+npx playwright test
+npx playwright show-report
+```
+
 ### OpenAI Codex
 
 1. Authenticate on the host (once):

@@ -40,7 +40,11 @@ for key in "${!AGENT_MAP[@]}"; do
     fi
 done
 
+# Build Playwright browsers string from .env variable
+PLAYWRIGHT_BROWSERS="${PLAYWRIGHT_BROWSERS:-}"
+
 echo "Building with agents: ${AGENTS:-none (default Codex only)}"
+echo "Building with Playwright browsers: ${PLAYWRIGHT_BROWSERS:-none}"
 
 # Default to pushing if --push flag is provided
 PUSH_FLAG=""
@@ -51,6 +55,7 @@ fi
 # Build with Docker BuildKit
 DOCKER_BUILDKIT=1 docker build \
     --build-arg "CODING_AGENTS=$AGENTS" \
+    --build-arg "PLAYWRIGHT_BROWSERS=$PLAYWRIGHT_BROWSERS" \
     -t ghcr.io/rorar/vibe-kanban-docker:latest \
     -t ghcr.io/rorar/vibe-kanban-docker:local \
     $PUSH_FLAG \

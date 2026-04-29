@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
        ca-certificates curl git bash openssh-client gnupg python3 make g++ unzip \
+       libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 \
   && mkdir -p -m 755 /etc/apt/keyrings \
   && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
        | dd of=/etc/apt/keyrings/githubcli-archive-keyring.gpg \
@@ -42,6 +43,15 @@ RUN if [ -n "$CODING_AGENTS" ]; then \
 # which enables UnRAID's "Update Available" detection
 ARG VIBE_VERSION=latest
 RUN npm install -g vibe-kanban@${VIBE_VERSION}
+
+# Install Playwright for E2E testing (optional)
+# Set PLAYWRIGHT_BROWSERS to install browsers: chromium, firefox, webkit (space-separated)
+# Example: --build-arg PLAYWRIGHT_BROWSERS="chromium firefox"
+ARG PLAYWRIGHT_BROWSERS=
+RUN if [ -n "$PLAYWRIGHT_BROWSERS" ]; then \
+       npm install -g @playwright/test playwright && \
+       npx playwright install $PLAYWRIGHT_BROWSERS; \
+    fi
 
 # Dedicated workspace for mounted repositories
 WORKDIR /work

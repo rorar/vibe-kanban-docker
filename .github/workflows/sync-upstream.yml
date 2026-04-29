@@ -105,6 +105,8 @@ jobs:
         env:
           VERSION: ${{ needs.check-upstream.outputs.npm_version }}
         run: |
+          # Delete local tag if exists (allows re-tagging after rebuild)
+          git tag -d "v${VERSION}" 2>/dev/null || true
           git tag -a "v${VERSION}" -m "vibe-kanban v${VERSION}"
-          git push origin "v${VERSION}"
+          git push origin "v${VERSION}" --force
           echo "::notice title=Image Updated::Docker image rebuilt with vibe-kanban v${VERSION}"

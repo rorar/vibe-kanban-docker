@@ -10,6 +10,7 @@ RUN apt-get update \
        ca-certificates curl git bash openssh-client gnupg python3 python3-pip python3-venv make g++ unzip \
        tmux nano ripgrep jq tree bat fd-find man tldr \
        libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 \
+       libx11-xcb1 libxcursor1 libgtk-3-0 libgdk-pixbuf2.0-0 \
        imagemagick libvips librsvg2-bin pngquant libwebp-dev \
   && mkdir -p -m 755 /etc/apt/keyrings \
   && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \

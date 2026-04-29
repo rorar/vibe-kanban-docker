@@ -67,6 +67,9 @@ if [ -n "$RUNTIME_AGENTS" ]; then
         # Install via curl (not npm)
         if [[ " ${AGENTS_CURL[@]} " =~ " ${agent} " ]]; then
             echo "[startup] Installing $agent via curl..."
+            # Set HOME to /home/node so Cursor installs to persistent location
+            HOME=/home/node \
+            PATH=/home/node/.local/bin:$PATH \
             curl -fsSL https://cursor.com/install | bash
             continue
         fi
@@ -87,6 +90,8 @@ if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
     BROWSERS=$(normalize_list "$RUNTIME_PLAYWRIGHT_BROWSERS")
     echo "[startup] Installing Playwright with browsers: $BROWSERS"
     npm install -g @playwright/test playwright
+    # Set browser cache path to persistent mount location
+    export PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright
     npx playwright install $BROWSERS
 fi
 

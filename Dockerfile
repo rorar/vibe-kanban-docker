@@ -11,6 +11,14 @@ RUN apt-get update \
        tmux nano ripgrep jq tree bat fd-find man tldr \
        libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 \
        libx11-xcb1 libxcursor1 libgtk-3-0 libgdk-pixbuf2.0-0 \
+       # WebKit browser dependencies
+       libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 gstreamer1.0-plugins-good \
+       libgtk-4-1 libgraphene-1.0-0 libxslt1.0 libxml2 \
+       libevent-2.1-7 libopus0 \
+       libflite1 libflite-speech-tools1 \
+       libavif15 libharfbuzz-icu0 \
+       libsecret-1-0 libenchant-2-2 libhyphen0 libmanette-2-0 \
+       libx264-dev libgles2 \
        imagemagick libvips librsvg2-bin pngquant libwebp-dev \
   && mkdir -p -m 755 /etc/apt/keyrings \
   && curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \

@@ -72,12 +72,13 @@ check_and_install_npm() {
     local package="$1"
     local name="${2:-$package}"
     
+    echo "[startup] Checking $name..."
     local installed=$(get_installed_npm_version "$package")
     local latest=$(get_latest_npm_version "$package")
     
     if [ -z "$installed" ]; then
-        echo "[startup] Installing $name (not found)..."
-        npm install -g "$package" || echo "[startup] WARN: Failed to install $name"
+        echo "[startup] $name not installed, installing..."
+        npm install -g "$package" && echo "[startup] $name installed successfully" || echo "[startup] WARN: Failed to install $name"
         return
     fi
     
@@ -93,11 +94,11 @@ check_and_install_npm() {
             echo "[startup] $name: installed=$installed (newer than latest=$latest), keeping..."
             ;;
         same)
-            echo "[startup] $name: already latest ($installed)"
+            echo "[startup] $name already installed ($installed)"
             ;;
         older)
-            echo "[startup] Upgrading $name: $installed → $latest"
-            npm install -g "$package" || echo "[startup] WARN: Failed to upgrade $name"
+            echo "[startup] $name: upgrading $installed → $latest"
+            npm install -g "$package" && echo "[startup] $name upgraded successfully" || echo "[startup] WARN: Failed to upgrade $name"
             ;;
     esac
 }
@@ -108,9 +109,11 @@ check_and_install_playwright_browser() {
     local browser="$1"
     local cache_path="/home/node/.cache/ms-playwright"
     
+    echo "[startup] Checking $browser browser..."
+    
     # Check if browser is already installed
     if [ -d "$cache_path/$browser" ]; then
-        echo "[startup] $browser: already cached"
+        echo "[startup] $browser browser already installed"
         return
     fi
     
@@ -118,14 +121,14 @@ check_and_install_playwright_browser() {
     if [ -d "$cache_path" ]; then
         local browser_folder=$(ls -d "$cache_path"/*-"$browser"-* 2>/dev/null | head -1)
         if [ -n "$browser_folder" ] && [ -d "$browser_folder" ]; then
-            echo "[startup] $browser: already cached ($(basename "$browser_folder"))"
+            echo "[startup] $browser browser already installed ($(basename "$browser_folder"))"
             return
         fi
     fi
     
-    echo "[startup] Installing Playwright browser: $browser"
+    echo "[startup] $browser browser not installed, installing..."
     export PLAYWRIGHT_BROWSERS_PATH="$cache_path"
-    npx playwright install "$browser" || echo "[startup] WARN: Failed to install $browser"
+    npx playwright install "$browser" && echo "[startup] $browser browser installed successfully" || echo "[startup] WARN: Failed to install $browser"
 }
 
 # Check and install Python tool via pipx
@@ -133,38 +136,41 @@ check_and_install_playwright_browser() {
 check_and_install_python() {
     local tool="$1"
     
+    echo "[startup] Checking $tool..."
+    
     # Check if already installed
     if command -v "$tool" &> /dev/null; then
-        echo "[startup] Python tool $tool: already installed"
+        echo "[startup] $tool already installed"
         # Upgrade if newer version available (pipx upgrade only upgrades if needed)
         OLD_VER=$(pipx runpip "$tool" --version 2>/dev/null || echo "")
         pipx upgrade "$tool" 2>/dev/null
         NEW_VER=$(pipx runpip "$tool" --version 2>/dev/null || echo "")
         if [ "$OLD_VER" != "$NEW_VER" ] && [ -n "$NEW_VER" ]; then
-            echo "[startup] Python tool $tool: upgraded ($OLD_VER → $NEW_VER)"
+            echo "[startup] $tool upgraded ($OLD_VER → $NEW_VER)"
         else
-            echo "[startup] Python tool $tool: already latest ($NEW_VER)"
+            echo "[startup] $tool already latest ($NEW_VER)"
         fi
         return
     fi
     
-    echo "[startup] Installing Python tool: $tool"
-    pipx install "$tool" || echo "[startup] WARN: Failed to install $tool"
+    echo "[startup] $tool not installed, installing..."
+    pipx install "$tool" && echo "[startup] $tool installed successfully" || echo "[startup] WARN: Failed to install $tool"
 }
 
 # Check and install Cursor CLI
 # Usage: check_and_install_cursor
 check_and_install_cursor() {
+    echo "[startup] Checking Cursor..."
     # Cursor doesn't expose version API, so check if binary exists
     if command -v cursor &> /dev/null; then
-        echo "[startup] Cursor: already installed"
+        echo "[startup] Cursor already installed"
         return
     fi
     
-    echo "[startup] Installing Cursor CLI..."
+    echo "[startup] Cursor not installed, installing..."
     HOME=/home/node \
     PATH=/home/node/.local/bin:$PATH \
-    curl -fsSL https://cursor.com/install | bash
+    curl -fsSL https://cursor.com/install | bash && echo "[startup] Cursor installed successfully"
 }
 
 # ============================================================================

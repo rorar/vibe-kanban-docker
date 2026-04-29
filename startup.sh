@@ -20,9 +20,24 @@ declare -A AGENT_MAP=(
     ["qwen"]="qwen-code"
 )
 
-# Function to normalize list (replace commas with spaces)
+# Function to normalize list: replace commas with spaces, collapse multiple spaces, trim
 normalize_list() {
-    echo "$1" | tr ',' ' '
+    local input="$1"
+    # Replace commas with spaces, collapse multiple spaces to one, trim leading/trailing
+    echo "$input" | sed 's/,/ /g' | tr -s ' ' | sed 's/^ //;s/ $//'
+}
+
+# Function to install a list of tools
+install_tools() {
+    local list="$1"
+    local type="$2"
+    
+    for item in $list; do
+        # Skip empty items
+        [ -z "$item" ] && continue
+        echo "[startup] Installing $type: $item..."
+        npm install -g "$item"
+    done
 }
 
 # Install coding agents from RUNTIME_AGENTS env var (space or comma-separated)
@@ -30,17 +45,16 @@ if [ -n "$RUNTIME_AGENTS" ]; then
     AGENTS=$(normalize_list "$RUNTIME_AGENTS")
     echo "[startup] Installing coding agents: $AGENTS"
     for agent in $AGENTS; do
-        # Trim whitespace
-        agent=$(echo "$agent" | xargs)
-        if [ -n "$agent" ]; then
-            if [ -n "${AGENT_MAP[$agent]}" ]; then
-                echo "[startup] Installing ${AGENT_MAP[$agent]}..."
-                npm install -g "${AGENT_MAP[$agent]}"
-            else
-                # Try as-is if not in map (for custom packages)
-                echo "[startup] Installing $agent..."
-                npm install -g "$agent"
-            fi
+        # Skip empty items
+        [ -z "$agent" ] && continue
+        
+        if [ -n "${AGENT_MAP[$agent]}" ]; then
+            echo "[startup] Installing ${AGENT_MAP[$agent]}..."
+            npm install -g "${AGENT_MAP[$agent]}"
+        else
+            # Try as-is if not in map (for custom packages)
+            echo "[startup] Installing $agent..."
+            npm install -g "$agent"
         fi
     done
 fi
@@ -57,7 +71,7 @@ fi
 if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
     TOOLS=$(normalize_list "$RUNTIME_TESTING_TOOLS")
     echo "[startup] Installing testing tools: $TOOLS"
-    npm install -g $TOOLS
+    install_tools "$TOOLS" "testing tool"
 fi
 
 echo "[startup] Tool installation complete."

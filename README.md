@@ -59,28 +59,57 @@ Build the base image once (`docker build -t vibe-kanban:base -f Dockerfile .`), 
 
 ### Coding Agents
 
-This image includes **OpenAI Codex** by default. Additional coding agents can be installed at build time using the `CODING_AGENTS` build argument:
+This image includes **OpenAI Codex** by default. Additional coding agents can be installed at build time.
 
-```dockerfile
-# Build with additional agents
+#### Quick Start with Build Script
+
+1. Copy the example env file:
+   ```bash
+   cp examples/build.env.example .env
+   ```
+
+2. Edit `.env` and enable agents:
+   ```env
+   AGENT_claude=true
+   AGENT_gemini=true
+   ```
+
+3. Build:
+   ```bash
+   chmod +x build.sh
+   ./build.sh           # Local build only
+   ./build.sh --push    # Build and push to GHCR
+   ```
+
+#### Available Agents
+
+| Agent | Package | Description |
+|-------|---------|-------------|
+| `AGENT_codex` | `@openai/codex` | OpenAI Codex (default) |
+| `AGENT_claude` | `@anthropic-ai/claude-code` | Anthropic Claude Code |
+| `AGENT_gemini` | `@google/gemini-cli` | Google Gemini CLI |
+| `AGENT_copilot` | `@githubnext/copilot-cli` | GitHub Copilot |
+| `AGENT_amp` | `amp-code` | Amp Code |
+| `AGENT_cursor` | `@cursor/cli` | Cursor Agent CLI |
+| `AGENT_opencode` | `@opencode-ai/cli` | SST OpenCode |
+| `AGENT_droid` | `droid-cli` | Factory Droid |
+| `AGENT_clauderouter` | `claude-code-router` | Claude Code Router |
+| `AGENT_qwen` | `qwen-code` | Qwen Code |
+
+#### Docker Build Directly
+
+```bash
 docker build --build-arg "CODING_AGENTS=@anthropic-ai/claude-code @google/gemini-cli" .
 ```
 
-Or in docker-compose:
+#### Docker Compose
+
 ```yaml
 build:
   context: .
   args:
     CODING_AGENTS: "@anthropic-ai/claude-code @google/gemini-cli"
 ```
-
-#### Available Coding Agents
-
-| Package | Agent | Provider |
-|---------|-------|----------|
-| `@openai/codex` | Codex | OpenAI (installed by default) |
-| `@anthropic-ai/claude-code` | Claude Code | Anthropic |
-| `@google/gemini-cli` | Gemini CLI | Google |
 
 Each agent requires its own authentication. After building, authenticate on the host and the credentials will be mounted into the container.
 

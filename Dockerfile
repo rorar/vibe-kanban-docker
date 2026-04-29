@@ -28,38 +28,15 @@ RUN apt-get update \
 RUN npm install -g @openai/codex@latest \
   && codex --version >/tmp/codex-version
 
-# Install additional coding agents based on build-arg (comma-separated list)
-# Available agents:
-#   - @anthropic-ai/claude-code (Claude Code by Anthropic)
-#   - @google/gemini-cli (Gemini CLI by Google)
-# Example: --build-arg CODING_AGENTS=@anthropic-ai/claude-code,@google/gemini-cli
-ARG CODING_AGENTS=
-RUN if [ -n "$CODING_AGENTS" ]; then \
-       npm install -g $CODING_AGENTS; \
-    fi
-
 # Install vibe-kanban at build time (not runtime)
 # This ensures the Docker image digest changes when a new version is released,
 # which enables UnRAID's "Update Available" detection
 ARG VIBE_VERSION=latest
 RUN npm install -g vibe-kanban@${VIBE_VERSION}
 
-# Install Playwright for E2E testing (optional)
-# Set PLAYWRIGHT_BROWSERS to install browsers: chromium, firefox, webkit (space-separated)
-# Example: --build-arg PLAYWRIGHT_BROWSERS="chromium firefox"
-ARG PLAYWRIGHT_BROWSERS=
-RUN if [ -n "$PLAYWRIGHT_BROWSERS" ]; then \
-       npm install -g @playwright/test playwright && \
-       npx playwright install $PLAYWRIGHT_BROWSERS; \
-    fi
-
-# Install testing tools for unit/integration testing (optional)
-# Set TESTING_TOOLS to install: vitest, jest, msw (space-separated)
-# Example: --build-arg TESTING_TOOLS="vitest jest msw"
-ARG TESTING_TOOLS=
-RUN if [ -n "$TESTING_TOOLS" ]; then \
-       npm install -g $TESTING_TOOLS; \
-    fi
+# Copy startup script for runtime tool installation
+COPY startup.sh /usr/local/bin/startup.sh
+RUN chmod +x /usr/local/bin/startup.sh
 
 # Dedicated workspace for mounted repositories
 WORKDIR /work
@@ -72,5 +49,5 @@ ENV GIT_AUTHOR_NAME="Your Name" \
     GIT_COMMITTER_NAME="Your Name" \
     GIT_COMMITTER_EMAIL="you@example.com"
 
-# Launch Vibe Kanban from installed package
-CMD ["bash", "-lc", "vibe-kanban"]
+# Launch Vibe Kanban via startup script (handles runtime tool installation)
+CMD ["/usr/local/bin/startup.sh", "bash", "-lc", "vibe-kanban"]

@@ -59,116 +59,66 @@ Build the base image once (`docker build -t vibe-kanban:base -f Dockerfile .`), 
 
 ### Coding Agents
 
-This image includes **OpenAI Codex** by default. Additional coding agents can be installed at build time.
-
-#### Quick Start with Build Script
-
-1. Copy the example env file:
-   ```bash
-   cp examples/build.env.example .env
-   ```
-
-2. Edit `.env` and enable agents:
-   ```env
-   AGENT_claude=true
-   AGENT_gemini=true
-   ```
-
-3. Build:
-   ```bash
-   chmod +x build.sh
-   ./build.sh           # Local build only
-   ./build.sh --push    # Build and push to GHCR
-   ```
+This image includes **OpenAI Codex** by default. Additional coding agents can be installed at **runtime** via environment variables.
 
 #### Available Agents
 
 | Agent | Package | Description |
 |-------|---------|-------------|
-| `AGENT_codex` | `@openai/codex` | OpenAI Codex (default) |
-| `AGENT_claude` | `@anthropic-ai/claude-code` | Anthropic Claude Code |
-| `AGENT_gemini` | `@google/gemini-cli` | Google Gemini CLI |
-| `AGENT_copilot` | `@githubnext/copilot-cli` | GitHub Copilot |
-| `AGENT_amp` | `amp-code` | Amp Code |
-| `AGENT_cursor` | `@cursor/cli` | Cursor Agent CLI |
-| `AGENT_opencode` | `@opencode-ai/cli` | SST OpenCode |
-| `AGENT_droid` | `droid-cli` | Factory Droid |
-| `AGENT_clauderouter` | `claude-code-router` | Claude Code Router |
-| `AGENT_qwen` | `qwen-code` | Qwen Code |
+| Codex | `@openai/codex` | OpenAI Codex (default) |
+| `claude` | `@anthropic-ai/claude-code` | Anthropic Claude Code |
+| `gemini` | `@google/gemini-cli` | Google Gemini CLI |
+| `copilot` | `@githubnext/copilot-cli` | GitHub Copilot |
+| `amp` | `amp-code` | Amp Code |
+| `cursor` | `@cursor/cli` | Cursor Agent CLI |
+| `opencode` | `@opencode-ai/cli` | SST OpenCode |
+| `droid` | `droid-cli` | Factory Droid |
+| `clauderouter` | `claude-code-router` | Claude Code Router |
+| `qwen` | `qwen-code` | Qwen Code |
 
-#### Docker Build Directly
+#### Docker Run
 
 ```bash
-docker build --build-arg "CODING_AGENTS=@anthropic-ai/claude-code @google/gemini-cli" .
+docker run -e "RUNTIME_AGENTS=claude gemini" ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
 #### Docker Compose
 
 ```yaml
-build:
-  context: .
-  args:
-    CODING_AGENTS: "@anthropic-ai/claude-code @google/gemini-cli"
+services:
+  vibe:
+    image: ghcr.io/rorar/vibe-kanban-docker:latest
+    environment:
+      - RUNTIME_AGENTS=claude gemini
 ```
+
+#### UnRAID Template
+
+Use the template inputs for `RUNTIME_AGENTS` field.
 
 Each agent requires its own authentication. After building, authenticate on the host and the credentials will be mounted into the container.
 
 ### Playwright E2E Testing
 
-Playwright is available for E2E testing. Install browsers at build time:
+Playwright is available for E2E testing. Install browsers at **runtime**:
 
 ```bash
-# Install Chromium only
-docker build --build-arg "PLAYWRIGHT_BROWSERS=chromium" .
-
-# Install all browsers
-docker build --build-arg "PLAYWRIGHT_BROWSERS=chromium firefox webkit" .
-```
-
-Or in docker-compose:
-```yaml
-build:
-  context: .
-  args:
-    PLAYWRIGHT_BROWSERS: "chromium firefox webkit"
-```
-
-**Setup tests in your project:**
-```bash
-npx playwright init
-# Copy example config (edit to match installed browsers)
-cp examples/playwright.config.ts.example playwright.config.ts
-# Create tests directory
-mkdir tests
+docker run -e "RUNTIME_PLAYWRIGHT_BROWSERS=chromium firefox" ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
 **Run tests:**
 ```bash
-npx playwright test              # Run all projects
-npx playwright test --project=chromium  # Run single browser
+npx playwright test              # Run all configured browsers
+npx playwright test --project=chromium  # Single browser
 npx playwright show-report       # View HTML report
 ```
 
-A multi-browser config template is available at `examples/playwright.config.ts.example`.
-
 ### Unit & Integration Testing
 
-Install testing frameworks for unit and integration testing:
+Install testing frameworks at **runtime**:
 
 ```bash
-# Install Vitest for unit testing
-docker build --build-arg "TESTING_TOOLS=vitest" .
-
-# Install Vitest + Jest + MSW
-docker build --build-arg "TESTING_TOOLS=vitest jest msw" .
-```
-
-Or in docker-compose:
-```yaml
-build:
-  context: .
-  args:
-    TESTING_TOOLS: "vitest jest msw"
+docker run -e "RUNTIME_TESTING_TOOLS=vitest jest msw" ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
 **Available tools:**
@@ -176,21 +126,23 @@ build:
 - `jest` - Classic unit testing framework
 - `msw` - Mock Service Worker for API mocking
 
-**Setup tests in your project:**
-```bash
-# Initialize Vitest
-npx vitest init
-# Copy example config
-cp examples/vitest.config.ts.example vitest.config.ts
-# Create tests directory
-mkdir tests
-```
-
 **Run tests:**
 ```bash
 npx vitest run          # Run tests once
 npx vitest              # Watch mode
 npx vitest --coverage   # With coverage
+```
+
+### All Tools at Once
+
+Combine multiple runtime installations:
+
+```bash
+docker run \
+  -e "RUNTIME_AGENTS=claude gemini" \
+  -e "RUNTIME_PLAYWRIGHT_BROWSERS=chromium firefox" \
+  -e "RUNTIME_TESTING_TOOLS=vitest jest" \
+  ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
 ### OpenAI Codex

@@ -40,15 +40,16 @@ for key in "${!AGENT_MAP[@]}"; do
     fi
 done
 
-# Build Playwright browsers string from .env variable
-PLAYWRIGHT_BROWSERS="${PLAYWRIGHT_BROWSERS:-}"
+# Build Playwright browsers string from .env variable (for runtime installation)
+RUNTIME_PLAYWRIGHT_BROWSERS="${RUNTIME_PLAYWRIGHT_BROWSERS:-}"
 
-# Build testing tools string from .env variable
-TESTING_TOOLS="${TESTING_TOOLS:-}"
+# Build testing tools string from .env variable (for runtime installation)
+RUNTIME_TESTING_TOOLS="${RUNTIME_TESTING_TOOLS:-}"
 
-echo "Building with agents: ${AGENTS:-none (default Codex only)}"
-echo "Building with Playwright browsers: ${PLAYWRIGHT_BROWSERS:-none}"
-echo "Building with testing tools: ${TESTING_TOOLS:-none}"
+echo "Building image (tools installed at runtime via environment variables)"
+echo "Available runtime agents: claude, gemini, copilot, amp, cursor, opencode, droid, clauderouter, qwen"
+echo "Available runtime browsers: chromium, firefox, webkit"
+echo "Available runtime tools: vitest, jest, msw"
 
 # Default to pushing if --push flag is provided
 PUSH_FLAG=""
@@ -57,10 +58,8 @@ if [ "$1" = "--push" ]; then
 fi
 
 # Build with Docker BuildKit
+# Note: Tools are now installed at runtime via environment variables
 DOCKER_BUILDKIT=1 docker build \
-    --build-arg "CODING_AGENTS=$AGENTS" \
-    --build-arg "PLAYWRIGHT_BROWSERS=$PLAYWRIGHT_BROWSERS" \
-    --build-arg "TESTING_TOOLS=$TESTING_TOOLS" \
     -t ghcr.io/rorar/vibe-kanban-docker:latest \
     -t ghcr.io/rorar/vibe-kanban-docker:local \
     $PUSH_FLAG \

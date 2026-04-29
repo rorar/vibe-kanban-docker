@@ -2,6 +2,7 @@
 # Runtime installation script for optional tools
 # Installs coding agents, testing tools, and Playwright browsers at container startup
 # Supports both space-separated and comma-separated values
+# Includes version checking to only update when newer versions available
 
 set -e
 
@@ -18,6 +19,147 @@ export PATH="$PIPX_BIN_DIR:$PATH"
 if [ -d "/home/node/npm-modules" ] && [ ! -L "/usr/local/lib/node_modules" ]; then
     ln -sf /home/node/npm-modules /usr/local/lib/node_modules 2>/dev/null || true
 fi
+
+# ============================================================================
+# Version Checking Functions
+# ============================================================================
+
+# Check if network is available
+check_network() {
+    curl -s --max-time 5 https://registry.npmjs.org > /dev/null 2>&1
+}
+
+# Get installed npm package version
+get_installed_npm_version() {
+    local package="$1"
+    npm list -g "$package" --depth=0 --json 2>/dev/null | \
+        grep -oP '"version":\s*"\K[^"]+' | head -1
+}
+
+# Get latest npm package version from registry
+get_latest_npm_version() {
+    local package="$1"
+    npm view "$package" version 2>/dev/null
+}
+
+# Compare two version strings (semver)
+# Returns: newer, older, same
+version_compare() {
+    local v1="$1" v2="$2"
+    
+    # Handle empty versions
+    [ -z "$v1" ] && [ -z "$v2" ] && echo "same" && return
+    [ -z "$v1" ] && echo "older" && return
+    [ -z "$v2" ] && echo "newer" && return
+    
+    # Same version
+    [ "$v1" = "$v2" ] && echo "same" && return
+    
+    # Use sort -V for semver comparison
+    local sorted=$(echo -e "$v1\n$v2" | sort -V | tail -1)
+    
+    if [ "$sorted" = "$v1" ]; then
+        echo "older"
+    else
+        echo "newer"
+    fi
+}
+
+# Check and install npm package with version comparison
+# Usage: check_and_install_npm <package> <name>
+check_and_install_npm() {
+    local package="$1"
+    local name="${2:-$package}"
+    
+    local installed=$(get_installed_npm_version "$package")
+    local latest=$(get_latest_npm_version "$package")
+    
+    if [ -z "$installed" ]; then
+        echo "[startup] Installing $name (not found)..."
+        npm install -g "$package"
+        return
+    fi
+    
+    if [ -z "$latest" ]; then
+        echo "[startup] WARN: Cannot check latest version for $name, using installed: $installed"
+        return
+    fi
+    
+    local comparison=$(version_compare "$installed" "$latest")
+    
+    case "$comparison" in
+        newer)
+            echo "[startup] $name: installed=$installed (newer than latest=$latest), keeping..."
+            ;;
+        same)
+            echo "[startup] $name: already latest ($installed)"
+            ;;
+        older)
+            echo "[startup] Upgrading $name: $installed → $latest"
+            npm install -g "$package"
+            ;;
+    esac
+}
+
+# Check and install Playwright browser
+# Usage: check_and_install_playwright_browser <browser>
+check_and_install_playwright_browser() {
+    local browser="$1"
+    local cache_path="/home/node/.cache/ms-playwright"
+    
+    # Check if browser is already installed (folder exists)
+    if [ -d "$cache_path" ]; then
+        # List installed browsers
+        local installed=$(ls -d "$cache_path"/*-"$browser"-* 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
+        
+        if [ -n "$installed" ]; then
+            echo "[startup] $browser: already cached ($installed)"
+            return
+        fi
+    fi
+    
+    echo "[startup] Installing Playwright browser: $browser"
+    export PLAYWRIGHT_BROWSERS_PATH="$cache_path"
+    npx playwright install "$browser"
+}
+
+# Check and install Python tool via pipx
+# Usage: check_and_install_python <tool>
+check_and_install_python() {
+    local tool="$1"
+    
+    # Check if already installed
+    if command -v "$tool" &> /dev/null; then
+        echo "[startup] Python tool $tool: already installed"
+        # Upgrade if newer version available
+        if pipx upgrade "$tool" 2>/dev/null; then
+            echo "[startup] Python tool $tool: upgraded"
+        fi
+        return
+    fi
+    
+    echo "[startup] Installing Python tool: $tool"
+    pipx install "$tool"
+}
+
+# Check and install Cursor CLI
+# Usage: check_and_install_cursor
+check_and_install_cursor() {
+    # Cursor doesn't expose version API, so check if binary exists
+    if command -v cursor &> /dev/null; then
+        echo "[startup] Cursor: already installed"
+        return
+    fi
+    
+    echo "[startup] Installing Cursor CLI..."
+    HOME=/home/node \
+    PATH=/home/node/.local/bin:$PATH \
+    curl -fsSL https://cursor.com/install | bash
+}
+
+# ============================================================================
+# Main Installation Logic
+# ============================================================================
 
 echo "[startup] Checking for optional tools to install..."
 
@@ -43,44 +185,25 @@ normalize_list() {
     echo "$input" | sed 's/,/ /g' | tr -s ' ' | sed 's/^ //;s/ $//'
 }
 
-# Function to install a list of tools
-install_tools() {
-    local list="$1"
-    local type="$2"
-    
-    for item in $list; do
-        # Skip empty items
-        [ -z "$item" ] && continue
-        echo "[startup] Installing $type: $item..."
-        npm install -g "$item"
-    done
-}
-
 # Install coding agents from RUNTIME_AGENTS env var (space or comma-separated)
 if [ -n "$RUNTIME_AGENTS" ]; then
     AGENTS=$(normalize_list "$RUNTIME_AGENTS")
-    echo "[startup] Installing coding agents: $AGENTS"
+    echo "[startup] Checking coding agents: $AGENTS"
     for agent in $AGENTS; do
         # Skip empty items
         [ -z "$agent" ] && continue
         
         # Install via curl (not npm)
         if [[ " ${AGENTS_CURL[@]} " =~ " ${agent} " ]]; then
-            echo "[startup] Installing $agent via curl..."
-            # Set HOME to /home/node so Cursor installs to persistent location
-            HOME=/home/node \
-            PATH=/home/node/.local/bin:$PATH \
-            curl -fsSL https://cursor.com/install | bash
+            check_and_install_cursor
             continue
         fi
         
         if [ -n "${AGENT_MAP[$agent]}" ]; then
-            echo "[startup] Installing ${AGENT_MAP[$agent]}..."
-            npm install -g "${AGENT_MAP[$agent]}"
+            check_and_install_npm "${AGENT_MAP[$agent]}" "$agent"
         else
             # Try as-is if not in map (for custom packages)
-            echo "[startup] Installing $agent..."
-            npm install -g "$agent"
+            check_and_install_npm "$agent" "$agent"
         fi
     done
 fi
@@ -88,35 +211,45 @@ fi
 # Install Playwright and browsers from RUNTIME_PLAYWRIGHT_BROWSERS env var
 if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
     BROWSERS=$(normalize_list "$RUNTIME_PLAYWRIGHT_BROWSERS")
-    echo "[startup] Installing Playwright with browsers: $BROWSERS"
-    npm install -g @playwright/test playwright
-    # Set browser cache path to persistent mount location
-    export PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright
-    npx playwright install $BROWSERS
+    echo "[startup] Checking Playwright browsers: $BROWSERS"
+    # Install Playwright core if not present
+    if ! npm list -g @playwright/test &> /dev/null; then
+        npm install -g @playwright/test playwright
+    fi
+    # Check and install each browser
+    for browser in $BROWSERS; do
+        [ -z "$browser" ] && continue
+        check_and_install_playwright_browser "$browser"
+    done
 fi
 
 # Install testing tools from RUNTIME_TESTING_TOOLS env var
 if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
     TOOLS=$(normalize_list "$RUNTIME_TESTING_TOOLS")
-    echo "[startup] Installing testing tools: $TOOLS"
-    install_tools "$TOOLS" "testing tool"
+    echo "[startup] Checking testing tools: $TOOLS"
+    for tool in $TOOLS; do
+        [ -z "$tool" ] && continue
+        check_and_install_npm "$tool" "testing:$tool"
+    done
 fi
 
 # Install SVG tools from RUNTIME_SVG_TOOLS env var
 if [ -n "$RUNTIME_SVG_TOOLS" ]; then
     TOOLS=$(normalize_list "$RUNTIME_SVG_TOOLS")
-    echo "[startup] Installing SVG tools: $TOOLS"
-    install_tools "$TOOLS" "SVG tool"
+    echo "[startup] Checking SVG tools: $TOOLS"
+    for tool in $TOOLS; do
+        [ -z "$tool" ] && continue
+        check_and_install_npm "$tool" "svg:$tool"
+    done
 fi
 
 # Install additional Python tools from RUNTIME_PYTHON_TOOLS env var
 if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
     TOOLS=$(normalize_list "$RUNTIME_PYTHON_TOOLS")
-    echo "[startup] Installing Python tools: $TOOLS"
+    echo "[startup] Checking Python tools: $TOOLS"
     for tool in $TOOLS; do
         [ -z "$tool" ] && continue
-        echo "[startup] Installing Python tool: $tool..."
-        pipx install "$tool"
+        check_and_install_python "$tool"
     done
 fi
 

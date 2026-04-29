@@ -76,5 +76,39 @@ fi
 
 echo "[startup] Tool installation complete."
 
+# Display welcome message
+echo ""
+echo "========================================"
+echo "  Vibe Kanban Docker - Welcome!"
+echo "========================================"
+echo ""
+echo "Installed Tools:"
+echo "  - OpenAI Codex (always installed)"
+if [ -n "$RUNTIME_AGENTS" ]; then
+    echo "  - Additional agents: $RUNTIME_AGENTS"
+fi
+if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
+    echo "  - Playwright browsers: $RUNTIME_PLAYWRIGHT_BROWSERS"
+fi
+if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
+    echo "  - Testing tools: $RUNTIME_TESTING_TOOLS"
+fi
+echo ""
+echo "Getting Started:"
+echo "  - Access the app at: http://localhost:8085"
+echo "  - To use a coding agent, run: vibe-kanban"
+echo "  - To start vibe-kanban manually: bash -lc vibe-kanban"
+echo ""
+echo "Configuration Locations:"
+echo "  - Vibe Kanban data: /home/node/.local/share/vibe-kanban"
+echo "  - Codex config: ~/.codex"
+echo "  - GitHub CLI: ~/.config/gh"
+echo "  - Playwright config: ./playwright.config.ts"
+echo "  - Vitest config: ./vitest.config.ts"
+echo ""
+echo "For more info: https://github.com/rorar/vibe-kanban-docker"
+echo "========================================"
+echo ""
+
 # Execute the original command
 exec "$@"

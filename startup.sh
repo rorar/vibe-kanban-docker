@@ -13,12 +13,14 @@ declare -A AGENT_MAP=(
     ["gemini"]="@google/gemini-cli"
     ["copilot"]="@github/copilot"
     ["amp"]="@sourcegraph/amp"
-    ["cursor"]="@cursor/cli"
-    ["opencode"]="@opencode-ai/cli"
-    ["droid"]="droid-cli"
-    ["clauderouter"]="claude-code-router"
-    ["qwen"]="qwen-code"
+    ["opencode"]="opencode-ai"
+    ["droid"]="@factory/cli"
+    ["clauderouter"]="@musistudio/claude-code-router"
+    ["qwen"]="@qwen-code/qwen-code"
 )
+
+# Agents without npm packages (require manual installation)
+declare -a AGENTS_NO_NPM=("cursor")
 
 # Function to normalize list: replace commas with spaces, collapse multiple spaces, trim
 normalize_list() {
@@ -47,6 +49,12 @@ if [ -n "$RUNTIME_AGENTS" ]; then
     for agent in $AGENTS; do
         # Skip empty items
         [ -z "$agent" ] && continue
+        
+        # Skip agents without npm packages
+        if [[ " ${AGENTS_NO_NPM[@]} " =~ " ${agent} " ]]; then
+            echo "[startup] Skipping $agent (no npm package - install manually)"
+            continue
+        fi
         
         if [ -n "${AGENT_MAP[$agent]}" ]; then
             echo "[startup] Installing ${AGENT_MAP[$agent]}..."

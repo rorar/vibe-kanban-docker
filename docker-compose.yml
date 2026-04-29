@@ -23,6 +23,8 @@ services:
       - ./data/cache:/home/node/.cache/utils
       - ./data/worktrees:/var/tmp/vibe-kanban
       - ./data/work:/work
+      # NPM package cache for runtime-installed agents
+      - ${NPM_CACHE_DIR:-./data/npm-cache}:/root/.npm
     ports:
       - "8085:8085"
     tty: true

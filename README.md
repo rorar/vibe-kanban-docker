@@ -38,6 +38,20 @@ mkdir -p data/vibe data/work
 docker compose build
 docker compose up -d
 
+### Persisting NPM Cache
+
+Runtime-installed agents (Claude, Gemini, etc.) are downloaded at container startup. To avoid re-downloading on every start, mount an external NPM cache:
+
+```bash
+# Set in .env file
+NPM_CACHE_DIR=${HOME}/.docker-npm-cache
+
+# Or inline
+NPM_CACHE_DIR=./data/npm-cache docker compose up -d
+```
+
+This preserves downloaded packages between container rebuilds and host reboots.
+
 # 4. Visit the app
 open http://localhost:8085   # or use your browser
 ```
@@ -274,6 +288,7 @@ docker run \
 | `examples/docker-compose.local.yml.example` | Template for local Docker Compose overrides (copy → `docker-compose.local.yml`). |
 | `data/vibe` | Persisted Vibe state (`config.json`, `db.sqlite`). |
 | `data/work` | Workspace mounted to `/work` inside the container. |
+| `data/npm-cache` | NPM package cache (mounted at `/root/.npm`). |
 
 > Need multiple repos? Add extra mounts under `volumes:` in `docker-compose.yml`.
 

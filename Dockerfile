@@ -31,11 +31,7 @@ RUN npm install -g @openai/codex@latest \
 # This ensures the Docker image digest changes when a new version is released,
 # which enables UnRAID's "Update Available" detection
 ARG VIBE_VERSION=latest
-RUN if [ "$VIBE_VERSION" = "latest" ]; then \
-       npm install -g vibe-kanban@latest; \
-    else \
-       npm install -g vibe-kanban@${VIBE_VERSION}; \
-    fi
+RUN npm install -g vibe-kanban@${VIBE_VERSION}
 
 # Dedicated workspace for mounted repositories
 WORKDIR /work

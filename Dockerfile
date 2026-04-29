@@ -29,6 +29,19 @@ RUN apt-get update \
 # Install pipx for Python package isolation
 RUN pip3 install --break-system-packages pipx && pipx ensurepath
 
+# Create cache directories for runtime-installed tools (accessible by non-root user)
+RUN mkdir -p /home/node/.npm \
+               /home/node/.cache/ms-playwright \
+               /home/node/.local/share/pipx \
+               /home/node/.local/bin \
+               /home/node/npm-modules \
+               /home/node/.cursor \
+    && chmod -R 755 /home/node/.npm \
+               /home/node/.cache \
+               /home/node/.local \
+               /home/node/npm-modules \
+               /home/node/.cursor
+
 # Install SVGO for SVG optimization
 RUN npm install -g svgo
 

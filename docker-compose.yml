@@ -23,8 +23,12 @@ services:
       - ./data/cache:/home/node/.cache/utils
       - ./data/worktrees:/var/tmp/vibe-kanban
       - ./data/work:/work
-      # NPM package cache for runtime-installed agents
-      - ${NPM_CACHE_DIR:-./data/npm-cache}:/root/.npm
+      # Cache mounts for runtime-installed tools (persistent across rebuilds)
+      - ${NPM_CACHE_DIR:-./data/npm-cache}:/home/node/.npm:rw
+      - ${NPM_MODULES_DIR:-./data/npm-modules}:/home/node/npm-modules:rw
+      - ${PLAYWRIGHT_CACHE_DIR:-./data/playwright-cache}:/home/node/.cache/ms-playwright:rw
+      - ${PIPX_CACHE_DIR:-./data/pipx-cache}:/home/node/.local/share/pipx:rw
+      - ${CURSOR_CACHE_DIR:-./data/cursor-cache}:/home/node/.cursor:rw
     ports:
       - "8085:8085"
     tty: true

@@ -38,19 +38,35 @@ mkdir -p data/vibe data/work
 docker compose build
 docker compose up -d
 
-### Persisting NPM Cache
+### Persisting Runtime Tool Caches
 
-Runtime-installed agents (Claude, Gemini, etc.) are downloaded at container startup. To avoid re-downloading on every start, mount an external NPM cache:
+Runtime-installed tools (agents, browsers, Python packages) are downloaded at container startup. Cache mounts speed up subsequent starts and preserve downloads across rebuilds.
 
+**Default behavior** (caches stored in `./data/`):
 ```bash
-# Set in .env file
-NPM_CACHE_DIR=${HOME}/.docker-npm-cache
-
-# Or inline
-NPM_CACHE_DIR=./data/npm-cache docker compose up -d
+docker compose up -d
 ```
 
-This preserves downloaded packages between container rebuilds and host reboots.
+**External caches** (persists across project rebuilds):
+```bash
+# Add to .env file
+NPM_CACHE_DIR=${HOME}/.docker-npm-cache
+NPM_MODULES_DIR=${HOME}/.docker-npm-modules
+PLAYWRIGHT_CACHE_DIR=${HOME}/.docker-playwright-cache
+PIPX_CACHE_DIR=${HOME}/.docker-pipx-cache
+CURSOR_CACHE_DIR=${HOME}/.docker-cursor-cache
+
+docker compose up -d
+```
+
+**What gets cached:**
+| Cache | Location | Contents |
+|-------|----------|----------|
+| `NPM_CACHE_DIR` | `/home/node/.npm` | Downloaded npm packages |
+| `NPM_MODULES_DIR` | `/home/node/npm-modules` | Installed npm modules |
+| `PLAYWRIGHT_CACHE_DIR` | `/home/node/.cache/ms-playwright` | Browser binaries |
+| `PIPX_CACHE_DIR` | `/home/node/.local/share/pipx` | Python tools |
+| `CURSOR_CACHE_DIR` | `/home/node/.cursor` | Cursor CLI config |
 
 # 4. Visit the app
 open http://localhost:8085   # or use your browser
@@ -288,7 +304,11 @@ docker run \
 | `examples/docker-compose.local.yml.example` | Template for local Docker Compose overrides (copy → `docker-compose.local.yml`). |
 | `data/vibe` | Persisted Vibe state (`config.json`, `db.sqlite`). |
 | `data/work` | Workspace mounted to `/work` inside the container. |
-| `data/npm-cache` | NPM package cache (mounted at `/root/.npm`). |
+| `data/npm-cache` | NPM package cache (downloads). |
+| `data/npm-modules` | NPM installed modules (persistent installs). |
+| `data/playwright-cache` | Playwright browser binaries. |
+| `data/pipx-cache` | pipx Python tools. |
+| `data/cursor-cache` | Cursor CLI configuration. |
 
 > Need multiple repos? Add extra mounts under `volumes:` in `docker-compose.yml`.
 

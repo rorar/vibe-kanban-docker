@@ -5,6 +5,20 @@
 
 set -e
 
+# Configure npm cache location (use /home/node for non-root compatibility)
+npm config set cache /home/node/.npm --location=global
+npm config set prefix /usr/local --location=global
+
+# Configure pipx for non-root compatibility
+export PIPX_HOME=/home/node/.local/share/pipx
+export PIPX_BIN_DIR=/home/node/.local/bin
+export PATH="$PIPX_BIN_DIR:$PATH"
+
+# Link node_modules from persistent mount if exists (for cached installations)
+if [ -d "/home/node/npm-modules" ] && [ ! -L "/usr/local/lib/node_modules" ]; then
+    ln -sf /home/node/npm-modules /usr/local/lib/node_modules 2>/dev/null || true
+fi
+
 echo "[startup] Checking for optional tools to install..."
 
 # Agent name to npm package mapping

@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # Install system dependencies, GitHub CLI, Docker CLI, build tools, and utilities
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-       ca-certificates curl git bash openssh-client gnupg python3 make g++ unzip \
+       ca-certificates curl git bash openssh-client gnupg python3 python3-pip python3-venv make g++ unzip \
        tmux nano \
        libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 \
   && mkdir -p -m 755 /etc/apt/keyrings \
@@ -24,6 +24,9 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
        gh docker-ce-cli docker-compose-plugin \
   && rm -rf /var/lib/apt/lists/*
+
+# Install pipx for Python package isolation
+RUN pip3 install --break-system-packages pipx && pipx ensurepath
 
 # Install OpenAI Codex CLI globally and cache the binary
 RUN npm install -g @openai/codex@latest \

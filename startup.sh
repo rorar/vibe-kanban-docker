@@ -99,9 +99,22 @@ echo "  - Access the app at: http://localhost:8085"
 echo "  - To start vibe-kanban: bash -lc vibe-kanban"
 echo ""
 echo "Agent Commands:"
-echo "  - Claude Code: claude"
+echo "  - Codex: codex"
 if [ -n "$RUNTIME_AGENTS" ]; then
-    echo "  - Available agents: $RUNTIME_AGENTS"
+    for agent in $(echo "$RUNTIME_AGENTS" | sed 's/,/ /g'); do
+        case "$agent" in
+            claude)        echo "  - Claude Code: claude" ;;
+            gemini)        echo "  - Gemini CLI: gemini" ;;
+            copilot)       echo "  - GitHub Copilot: gh copilot" ;;
+            amp)           echo "  - Amp: amp" ;;
+            cursor)        echo "  - Cursor: cursor" ;;
+            opencode)      echo "  - OpenCode: opencode" ;;
+            droid)         echo "  - Droid: droid" ;;
+            clauderouter)  echo "  - Claude Code Router: ccr" ;;
+            qwen)          echo "  - Qwen Code: qwen" ;;
+            *)             echo "  - $agent: $agent" ;;
+        esac
+    done
 fi
 echo ""
 echo "Configuration Locations:"

@@ -27,6 +27,16 @@ RUN apt-get update \
 RUN npm install -g @openai/codex@latest \
   && codex --version >/tmp/codex-version
 
+# Install vibe-kanban at build time (not runtime)
+# This ensures the Docker image digest changes when a new version is released,
+# which enables UnRAID's "Update Available" detection
+ARG VIBE_VERSION=latest
+RUN if [ "$VIBE_VERSION" = "latest" ]; then \
+       npm install -g vibe-kanban@latest; \
+    else \
+       npm install -g vibe-kanban@${VIBE_VERSION}; \
+    fi
+
 # Dedicated workspace for mounted repositories
 WORKDIR /work
 
@@ -38,5 +48,5 @@ ENV GIT_AUTHOR_NAME="Your Name" \
     GIT_COMMITTER_NAME="Your Name" \
     GIT_COMMITTER_EMAIL="you@example.com"
 
-# Launch Vibe Kanban; relies on mounted repo and optional PORT env
-CMD ["bash", "-lc", "npx -y vibe-kanban"]
+# Launch Vibe Kanban from installed package
+CMD ["bash", "-lc", "vibe-kanban"]

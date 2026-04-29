@@ -25,6 +25,7 @@ fi
 # ============================================================================
 
 # Check if network is available
+# Returns: 0 if network available, 1 if not
 check_network() {
     curl -s --max-time 5 https://registry.npmjs.org > /dev/null 2>&1
 }
@@ -76,7 +77,7 @@ check_and_install_npm() {
     
     if [ -z "$installed" ]; then
         echo "[startup] Installing $name (not found)..."
-        npm install -g "$package"
+        npm install -g "$package" || echo "[startup] WARN: Failed to install $name"
         return
     fi
     
@@ -96,7 +97,7 @@ check_and_install_npm() {
             ;;
         older)
             echo "[startup] Upgrading $name: $installed → $latest"
-            npm install -g "$package"
+            npm install -g "$package" || echo "[startup] WARN: Failed to upgrade $name"
             ;;
     esac
 }
@@ -107,20 +108,24 @@ check_and_install_playwright_browser() {
     local browser="$1"
     local cache_path="/home/node/.cache/ms-playwright"
     
-    # Check if browser is already installed (folder exists)
+    # Check if browser is already installed
+    if [ -d "$cache_path/$browser" ]; then
+        echo "[startup] $browser: already cached"
+        return
+    fi
+    
+    # Also check for folder patterns like chromium-1234
     if [ -d "$cache_path" ]; then
-        # List installed browsers
-        local installed=$(ls -d "$cache_path"/*-"$browser"-* 2>/dev/null | head -1 | xargs basename 2>/dev/null || echo "")
-        
-        if [ -n "$installed" ]; then
-            echo "[startup] $browser: already cached ($installed)"
+        local browser_folder=$(ls -d "$cache_path"/*-"$browser"-* 2>/dev/null | head -1)
+        if [ -n "$browser_folder" ] && [ -d "$browser_folder" ]; then
+            echo "[startup] $browser: already cached ($(basename "$browser_folder"))"
             return
         fi
     fi
     
     echo "[startup] Installing Playwright browser: $browser"
     export PLAYWRIGHT_BROWSERS_PATH="$cache_path"
-    npx playwright install "$browser"
+    npx playwright install "$browser" || echo "[startup] WARN: Failed to install $browser"
 }
 
 # Check and install Python tool via pipx
@@ -131,15 +136,20 @@ check_and_install_python() {
     # Check if already installed
     if command -v "$tool" &> /dev/null; then
         echo "[startup] Python tool $tool: already installed"
-        # Upgrade if newer version available
-        if pipx upgrade "$tool" 2>/dev/null; then
-            echo "[startup] Python tool $tool: upgraded"
+        # Upgrade if newer version available (pipx upgrade only upgrades if needed)
+        OLD_VER=$(pipx runpip "$tool" --version 2>/dev/null || echo "")
+        pipx upgrade "$tool" 2>/dev/null
+        NEW_VER=$(pipx runpip "$tool" --version 2>/dev/null || echo "")
+        if [ "$OLD_VER" != "$NEW_VER" ] && [ -n "$NEW_VER" ]; then
+            echo "[startup] Python tool $tool: upgraded ($OLD_VER → $NEW_VER)"
+        else
+            echo "[startup] Python tool $tool: already latest ($NEW_VER)"
         fi
         return
     fi
     
     echo "[startup] Installing Python tool: $tool"
-    pipx install "$tool"
+    pipx install "$tool" || echo "[startup] WARN: Failed to install $tool"
 }
 
 # Check and install Cursor CLI
@@ -162,6 +172,12 @@ check_and_install_cursor() {
 # ============================================================================
 
 echo "[startup] Checking for optional tools to install..."
+
+# Check network availability before attempting version checks
+if ! check_network; then
+    echo "[startup] WARN: Network unavailable, skipping version checks"
+    echo "[startup] Using cached/installed versions only"
+fi
 
 # Agent name to npm package mapping
 declare -A AGENT_MAP=(
@@ -214,7 +230,7 @@ if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
     echo "[startup] Checking Playwright browsers: $BROWSERS"
     # Install Playwright core if not present
     if ! npm list -g @playwright/test &> /dev/null; then
-        npm install -g @playwright/test playwright
+        npm install -g @playwright/test playwright || echo "[startup] WARN: Failed to install Playwright"
     fi
     # Check and install each browser
     for browser in $BROWSERS; do
@@ -255,6 +271,12 @@ fi
 
 echo "[startup] Tool installation complete."
 
+# Normalize lists once for welcome message (avoid redundant parsing)
+RUNTIME_AGENTS_LIST=$(normalize_list "$RUNTIME_AGENTS")
+RUNTIME_BROWSERS_LIST=$(normalize_list "$RUNTIME_PLAYWRIGHT_BROWSERS")
+RUNTIME_TESTING_LIST=$(normalize_list "$RUNTIME_TESTING_TOOLS")
+RUNTIME_PYTHON_LIST=$(normalize_list "$RUNTIME_PYTHON_TOOLS")
+
 # Display welcome message with dynamic content based on installed tools
 echo ""
 echo "========================================"
@@ -264,17 +286,17 @@ echo ""
 echo "Installed Tools:"
 echo "  - OpenAI Codex (always installed)"
 echo "  - SVGO (always installed)"
-if [ -n "$RUNTIME_AGENTS" ]; then
-    echo "  - Additional agents: $RUNTIME_AGENTS"
+if [ -n "$RUNTIME_AGENTS_LIST" ]; then
+    echo "  - Additional agents: $RUNTIME_AGENTS_LIST"
 fi
-if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
-    echo "  - Playwright browsers: $RUNTIME_PLAYWRIGHT_BROWSERS"
+if [ -n "$RUNTIME_BROWSERS_LIST" ]; then
+    echo "  - Playwright browsers: $RUNTIME_BROWSERS_LIST"
 fi
-if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
-    echo "  - Testing tools: $RUNTIME_TESTING_TOOLS"
+if [ -n "$RUNTIME_TESTING_LIST" ]; then
+    echo "  - Testing tools: $RUNTIME_TESTING_LIST"
 fi
-if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
-    echo "  - Python tools: $RUNTIME_PYTHON_TOOLS"
+if [ -n "$RUNTIME_PYTHON_LIST" ]; then
+    echo "  - Python tools: $RUNTIME_PYTHON_LIST"
 fi
 echo ""
 echo "Getting Started:"
@@ -287,8 +309,9 @@ echo "  - SVGO: npx svgo -i input.svg -o output.svg"
 echo ""
 echo "Agent Commands:"
 echo "  - Codex: codex"
-if [ -n "$RUNTIME_AGENTS" ]; then
-    for agent in $(echo "$RUNTIME_AGENTS" | sed 's/,/ /g'); do
+if [ -n "$RUNTIME_AGENTS_LIST" ]; then
+    for agent in $RUNTIME_AGENTS_LIST; do
+        [ -z "$agent" ] && continue
         case "$agent" in
             claude)        echo "  - Claude Code: claude" ;;
             gemini)        echo "  - Gemini CLI: gemini" ;;
@@ -308,10 +331,11 @@ echo "Configuration Locations:"
 echo "  - Vibe Kanban: /home/node/.local/share/vibe-kanban"
 echo "  - Codex: ~/.codex"
 echo "  - GitHub CLI: ~/.config/gh"
-if [ -n "$RUNTIME_AGENTS" ]; then
+if [ -n "$RUNTIME_AGENTS_LIST" ]; then
     echo ""
     echo "Agent Configs:"
-    for agent in $(echo "$RUNTIME_AGENTS" | sed 's/,/ /g'); do
+    for agent in $RUNTIME_AGENTS_LIST; do
+        [ -z "$agent" ] && continue
         case "$agent" in
             claude)        echo "  - Claude Code: ~/.claude" ;;
             gemini)        echo "  - Gemini CLI: ~/.gemini" ;;
@@ -326,7 +350,7 @@ if [ -n "$RUNTIME_AGENTS" ]; then
         esac
     done
 fi
-if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
+if [ -n "$RUNTIME_BROWSERS_LIST" ]; then
     echo ""
     echo "Playwright:"
     echo "  - Config: ./playwright.config.ts"
@@ -334,29 +358,30 @@ if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
     echo "  - Single browser: npx playwright test --project=chromium"
     echo "  - View report: npx playwright show-report"
 fi
-if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
+if [ -n "$RUNTIME_TESTING_LIST" ]; then
     echo ""
     echo "Testing:"
-    if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
+    if echo "$RUNTIME_TESTING_LIST" | grep -q "vitest"; then
         echo "  - Vitest config: ./vitest.config.ts"
         echo "  - Run tests: npx vitest run"
     fi
-    if echo "$RUNTIME_TESTING_TOOLS" | grep -q "jest"; then
+    if echo "$RUNTIME_TESTING_LIST" | grep -q "jest"; then
         echo "  - Jest config: ./jest.config.js"
         echo "  - Run tests: npx jest"
     fi
 fi
-if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
+if [ -n "$RUNTIME_PYTHON_LIST" ]; then
     echo ""
     echo "Python Tools:"
-    echo "  - Installed: $RUNTIME_PYTHON_TOOLS"
+    echo "  - Installed: $RUNTIME_PYTHON_LIST"
 fi
 echo ""
 echo "Documentation:"
 echo "  - Vibe Kanban: https://vibekanban.com/docs"
 echo "  - Codex: https://developers.openai.com/codex"
-if [ -n "$RUNTIME_AGENTS" ]; then
-    for agent in $(echo "$RUNTIME_AGENTS" | sed 's/,/ /g'); do
+if [ -n "$RUNTIME_AGENTS_LIST" ]; then
+    for agent in $RUNTIME_AGENTS_LIST; do
+        [ -z "$agent" ] && continue
         case "$agent" in
             claude)        echo "  - Claude Code: https://code.claude.com" ;;
             gemini)        echo "  - Gemini CLI: https://geminicli.com/docs" ;;
@@ -370,14 +395,14 @@ if [ -n "$RUNTIME_AGENTS" ]; then
         esac
     done
 fi
-if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
+if [ -n "$RUNTIME_BROWSERS_LIST" ]; then
     echo "  - Playwright: https://playwright.dev/docs"
 fi
-if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
+if [ -n "$RUNTIME_PYTHON_LIST" ]; then
     echo "  - pipx: https://pipx.pypa.io"
 fi
 echo "  - SVGO: https://github.com/svg/svgo"
-if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
+if echo "$RUNTIME_TESTING_LIST" | grep -q "vitest"; then
     echo "  - Vitest: https://vitest.dev/guide"
 fi
 echo ""

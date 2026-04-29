@@ -231,6 +231,21 @@ ghcr.io/rorar/vibe-kanban-docker:latest
 
 The image digest changes on every update, enabling UnRAID's "Update Available" detection.
 
+#### UnRAID Template
+
+A full UnRAID template is available at:
+https://raw.githubusercontent.com/rorar/unraid-templates/main/templates/vibe-kanban.xml
+
+Features:
+- Web UI on port 8085
+- Persistent storage for data, cache, and worktrees
+- SSH keys and GitHub CLI config passthrough
+- Docker-in-Docker support via socket mount
+- Configurable git author identity
+- Advanced API key configuration
+
+See the [unraid-templates repository](https://github.com/rorar/unraid-templates) for the latest version.
+
 ---
 
 ## 📚 References

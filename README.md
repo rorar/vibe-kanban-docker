@@ -61,6 +61,8 @@ Build the base image once (`docker build -t vibe-kanban:base -f Dockerfile .`), 
 
 This image includes **OpenAI Codex** by default. Additional coding agents can be installed at **runtime** via environment variables.
 
+Supports both space-separated (`claude gemini`) and comma-separated (`claude,gemini`) values.
+
 #### Available Agents
 
 | Agent | Package | Description |
@@ -100,10 +102,12 @@ Each agent requires its own authentication. After building, authenticate on the 
 
 ### Playwright E2E Testing
 
-Playwright is available for E2E testing. Install browsers at **runtime**:
+Playwright is available for E2E testing. Install browsers at **runtime** (supports space or comma-separated values):
 
 ```bash
 docker run -e "RUNTIME_PLAYWRIGHT_BROWSERS=chromium firefox" ghcr.io/rorar/vibe-kanban-docker:latest
+# or
+docker run -e "RUNTIME_PLAYWRIGHT_BROWSERS=chromium,firefox,webkit" ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
 **Run tests:**
@@ -115,10 +119,12 @@ npx playwright show-report       # View HTML report
 
 ### Unit & Integration Testing
 
-Install testing frameworks at **runtime**:
+Install testing frameworks at **runtime** (supports space or comma-separated values):
 
 ```bash
 docker run -e "RUNTIME_TESTING_TOOLS=vitest jest msw" ghcr.io/rorar/vibe-kanban-docker:latest
+# or
+docker run -e "RUNTIME_TESTING_TOOLS=vitest,jest,msw" ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
 **Available tools:**

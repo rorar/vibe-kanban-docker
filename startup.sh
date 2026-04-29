@@ -19,8 +19,8 @@ declare -A AGENT_MAP=(
     ["qwen"]="@qwen-code/qwen-code"
 )
 
-# Agents without npm packages (require manual installation)
-declare -a AGENTS_NO_NPM=("cursor")
+# Agents installed via curl (not npm)
+declare -a AGENTS_CURL=("cursor")
 
 # Function to normalize list: replace commas with spaces, collapse multiple spaces, trim
 normalize_list() {
@@ -50,9 +50,10 @@ if [ -n "$RUNTIME_AGENTS" ]; then
         # Skip empty items
         [ -z "$agent" ] && continue
         
-        # Skip agents without npm packages
-        if [[ " ${AGENTS_NO_NPM[@]} " =~ " ${agent} " ]]; then
-            echo "[startup] Skipping $agent (no npm package - install manually)"
+        # Install via curl (not npm)
+        if [[ " ${AGENTS_CURL[@]} " =~ " ${agent} " ]]; then
+            echo "[startup] Installing $agent via curl..."
+            curl -fsSL https://cursor.com/install | bash
             continue
         fi
         

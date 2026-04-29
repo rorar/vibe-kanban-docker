@@ -147,6 +147,36 @@ These commands confirm the Codex CLI, GitHub CLI, and Docker CLI are ready insid
 
 ---
 
+## 🔄 Auto-Update (GitHub Actions)
+
+This repository uses GitHub Actions to automatically rebuild the Docker image when a new version of vibe-kanban is released on npm:
+
+- **Scheduled checks**: Every 6 hours
+- **Manual trigger**: Use "Sync with Upstream" workflow with `force_rebuild: true`
+- **Update detection**: Compares npm version with the latest git tag
+
+### Available Docker Tags
+
+| Tag | Description |
+|-----|-------------|
+| `latest` | Always points to the most recent version |
+| `0.x.x` | Specific semver version (e.g., `0.1.44`) |
+| `0.x` | Major.minor alias (e.g., `0.1`) |
+| `0` | Major version alias |
+| `sha-<hash>` | Git commit SHA |
+| `master` | Current master branch |
+
+### UnRAID
+
+Use the template with:
+```
+ghcr.io/rorar/vibe-kanban-docker:latest
+```
+
+The image digest changes on every update, enabling UnRAID's "Update Available" detection.
+
+---
+
 ## 📚 References
 
 - [Vibe Kanban Docs](https://www.vibekanban.com/docs/getting-started)

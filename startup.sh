@@ -81,6 +81,17 @@ if [ -n "$RUNTIME_SVG_TOOLS" ]; then
     install_tools "$TOOLS" "SVG tool"
 fi
 
+# Install additional Python tools from RUNTIME_PYTHON_TOOLS env var
+if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
+    TOOLS=$(normalize_list "$RUNTIME_PYTHON_TOOLS")
+    echo "[startup] Installing Python tools: $TOOLS"
+    for tool in $TOOLS; do
+        [ -z "$tool" ] && continue
+        echo "[startup] Installing Python tool: $tool..."
+        pipx install "$tool"
+    done
+fi
+
 echo "[startup] Tool installation complete."
 
 # Display welcome message with dynamic content based on installed tools
@@ -91,6 +102,7 @@ echo "========================================"
 echo ""
 echo "Installed Tools:"
 echo "  - OpenAI Codex (always installed)"
+echo "  - SVGO (always installed)"
 if [ -n "$RUNTIME_AGENTS" ]; then
     echo "  - Additional agents: $RUNTIME_AGENTS"
 fi
@@ -100,10 +112,17 @@ fi
 if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
     echo "  - Testing tools: $RUNTIME_TESTING_TOOLS"
 fi
+if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
+    echo "  - Python tools: $RUNTIME_PYTHON_TOOLS"
+fi
 echo ""
 echo "Getting Started:"
 echo "  - Access the app at: http://localhost:8085"
 echo "  - To start vibe-kanban: bash -lc vibe-kanban"
+echo ""
+echo "SVG Tools (always available):"
+echo "  - librsvg: rsvg-convert -.svg -.png"
+echo "  - SVGO: npx svgo -i input.svg -o output.svg"
 echo ""
 echo "Agent Commands:"
 echo "  - Codex: codex"
@@ -166,13 +185,10 @@ if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
         echo "  - Run tests: npx jest"
     fi
 fi
-if [ -n "$RUNTIME_SVG_TOOLS" ]; then
+if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
     echo ""
-    echo "SVG Tools:"
-    if echo "$RUNTIME_SVG_TOOLS" | grep -q "svgo"; then
-        echo "  - SVGO: npx svgo -i input.svg -o output.svg"
-        echo "  - Batch optimize: npx svgo -f ./svg/"
-    fi
+    echo "Python Tools:"
+    echo "  - Installed: $RUNTIME_PYTHON_TOOLS"
 fi
 echo ""
 echo "Documentation:"
@@ -196,9 +212,10 @@ fi
 if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
     echo "  - Playwright: https://playwright.dev/docs"
 fi
-if echo "$RUNTIME_SVG_TOOLS" | grep -q "svgo"; then
-    echo "  - SVGO: https://github.com/svg/svgo"
+if [ -n "$RUNTIME_PYTHON_TOOLS" ]; then
+    echo "  - pipx: https://pipx.pypa.io"
 fi
+echo "  - SVGO: https://github.com/svg/svgo"
 if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
     echo "  - Vitest: https://vitest.dev/guide"
 fi

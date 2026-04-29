@@ -118,29 +118,46 @@ if [ -n "$RUNTIME_AGENTS" ]; then
 fi
 echo ""
 echo "Configuration Locations:"
-echo "  - Vibe Kanban data: /home/node/.local/share/vibe-kanban"
-echo "  - Codex config: ~/.codex"
+echo "  - Vibe Kanban: /home/node/.local/share/vibe-kanban"
+echo "  - Codex: ~/.codex"
 echo "  - GitHub CLI: ~/.config/gh"
+if [ -n "$RUNTIME_AGENTS" ]; then
+    echo ""
+    echo "Agent Configs:"
+    for agent in $(echo "$RUNTIME_AGENTS" | sed 's/,/ /g'); do
+        case "$agent" in
+            claude)        echo "  - Claude Code: ~/.claude" ;;
+            gemini)        echo "  - Gemini CLI: ~/.gemini" ;;
+            copilot)       echo "  - GitHub Copilot: ~/.copilot" ;;
+            amp)           echo "  - Amp: ~/.amp" ;;
+            cursor)        echo "  - Cursor: ~/.cursor" ;;
+            opencode)      echo "  - OpenCode: ~/.config/opencode" ;;
+            droid)         echo "  - Droid: ~/.droid" ;;
+            clauderouter)  echo "  - Claude Code Router: ~/.claude-code-router" ;;
+            qwen)          echo "  - Qwen Code: ~/.qwen" ;;
+            *)             echo "  - $agent: ~/$agent" ;;
+        esac
+    done
+fi
 if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
-    echo "  - Playwright config: ./playwright.config.ts"
+    echo ""
+    echo "Playwright:"
+    echo "  - Config: ./playwright.config.ts"
+    echo "  - Run tests: npx playwright test"
+    echo "  - Single browser: npx playwright test --project=chromium"
+    echo "  - View report: npx playwright show-report"
 fi
 if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
-    echo "  - Vitest config: ./vitest.config.ts"
     echo ""
-    echo "Testing Commands:"
+    echo "Testing:"
     if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
-        echo "  - Vitest: npx vitest run"
+        echo "  - Vitest config: ./vitest.config.ts"
+        echo "  - Run tests: npx vitest run"
     fi
     if echo "$RUNTIME_TESTING_TOOLS" | grep -q "jest"; then
-        echo "  - Jest: npx jest"
+        echo "  - Jest config: ./jest.config.js"
+        echo "  - Run tests: npx jest"
     fi
-fi
-if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
-    echo ""
-    echo "Playwright Commands:"
-    echo "  - Run tests: npx playwright test"
-    echo "  - Run single browser: npx playwright test --project=chromium"
-    echo "  - View report: npx playwright show-report"
 fi
 echo ""
 echo "For more info: https://github.com/rorar/vibe-kanban-docker"

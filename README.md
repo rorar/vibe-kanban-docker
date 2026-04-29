@@ -16,6 +16,10 @@ Containerized developer environment for [Vibe Kanban](https://github.com/BloopAI
 - **GitHub workflow**: GitHub CLI and optional token/env wiring already configured.
 - **Docker-in-Docker tooling**: Container includes `docker` + compose plugin and mounts the host socket.
 - **Workspace mounts**: Your repo, SSH keys, git config, and CLI auth all ride along.
+- **Vibe coding tools**: tmux, nano, ripgrep, jq, tree, bat, fd-find, man, tldr.
+- **Image processing**: imagemagick, libvips, librsvg, pngquant.
+- **Python ready**: python3, pip, pipx with isolated environments.
+- **SVG optimization**: SVGO for minifying SVG files.
 
 ---
 
@@ -42,6 +46,53 @@ The service runs as `vibe` inside the Compose file and exposes port `8085` by de
 
 ---
 
+## 🔧 Always Available Tools
+
+These tools are pre-installed in the container at build time:
+
+### Development Tools
+
+| Tool | Command | Description |
+|------|---------|-------------|
+| tmux | `tmux` | Terminal multiplexer |
+| nano | `nano` | Simple text editor |
+| ripgrep | `rg` | Fast code search |
+| jq | `jq` | JSON processor |
+| tree | `tree` | Directory tree view |
+| bat | `bat` | Pretty file viewing |
+| fd | `fd` | Fast find alternative |
+| man | `man` | Manual pages |
+| tldr | `tldr` | Simplified documentation |
+
+### Image Processing
+
+| Tool | Command | Description |
+|------|---------|-------------|
+| imagemagick | `convert`, `identify`, `mogrify`, `display` | Image manipulation |
+| libvips | `vips` | Fast image processing |
+| librsvg | `rsvg-convert` | SVG rendering (SVG → PNG/PDF) |
+| pngquant | `pngquant` | PNG color optimization |
+| webp | `cwebp`, `dwebp` | WebP conversion |
+
+### Python & Scripts
+
+| Tool | Command | Description |
+|------|---------|-------------|
+| python3 | `python3` | Python interpreter |
+| pip | `pip3` | Python package installer |
+| pipx | `pipx` | Isolated Python environments |
+| svgo | `npx svgo` | SVG optimizer/minifier |
+
+### Available at Runtime
+
+Install additional tools at container startup via environment variables:
+
+- **Coding Agents**: Claude, Gemini, Copilot, Amp, Cursor, OpenCode, Droid, CCR, Qwen
+- **Testing Tools**: Vitest, Jest, MSW
+- **Python Tools**: httpie, black, ruff, mypy, pytest (via pipx)
+
+---
+
 ### Local Docker overlays
 
 Need extra packages or different dev settings without touching git-tracked files? Copy the provided templates and opt in locally:
@@ -65,18 +116,18 @@ Supports both space-separated (`claude gemini`) and comma-separated (`claude,gem
 
 #### Available Agents
 
-| Agent | Package | Description |
-|-------|---------|-------------|
-| Codex | `@openai/codex` | OpenAI Codex (default) |
-| `claude` | `@anthropic-ai/claude-code` | Anthropic Claude Code |
-| `gemini` | `@google/gemini-cli` | Google Gemini CLI |
-| `copilot` | `@githubnext/copilot-cli` | GitHub Copilot |
-| `amp` | `amp-code` | Amp Code |
-| `cursor` | `@cursor/cli` | Cursor Agent CLI |
-| `opencode` | `@opencode-ai/cli` | SST OpenCode |
-| `droid` | `droid-cli` | Factory Droid |
-| `clauderouter` | `claude-code-router` | Claude Code Router |
-| `qwen` | `qwen-code` | Qwen Code |
+| Agent | Package | Command | Config Path |
+|-------|---------|---------|-------------|
+| Codex | `@openai/codex` | `codex` | `~/.codex` |
+| `claude` | `@anthropic-ai/claude-code` | `claude` | `~/.claude` |
+| `gemini` | `@google/gemini-cli` | `gemini` | `~/.gemini` |
+| `copilot` | `@githubnext/copilot-cli` | `gh copilot` | `~/.copilot` |
+| `amp` | `amp-code` | `amp` | `~/.amp` |
+| `cursor` | `@cursor/cli` | `cursor` | `~/.cursor` |
+| `opencode` | `@opencode-ai/cli` | `opencode` | `~/.config/opencode` |
+| `droid` | `droid-cli` | `droid` | `~/.droid` |
+| `clauderouter` | `claude-code-router` | `ccr` | `~/.claude-code-router` |
+| `qwen` | `@qwen-code/qwen-code` | `qwen` | `~/.qwen` |
 
 #### Docker Run
 
@@ -139,6 +190,34 @@ npx vitest              # Watch mode
 npx vitest --coverage   # With coverage
 ```
 
+### Python Tools
+
+Install Python tools at **runtime** via pipx (supports space or comma-separated values):
+
+```bash
+docker run -e "RUNTIME_PYTHON_TOOLS=httpie black ruff" ghcr.io/rorar/vibe-kanban-docker:latest
+# or
+docker run -e "RUNTIME_PYTHON_TOOLS=httpie,black,ruff,mypy" ghcr.io/rorar/vibe-kanban-docker:latest
+```
+
+**Available tools:**
+- `httpie` - User-friendly HTTP client
+- `black` - Python code formatter
+- `ruff` - Fast Python linter
+- `mypy` - Static type checker
+- `pytest` - Unit testing framework
+- `isort` - Import sorter
+- `autoflake` - Remove unused imports
+- `pip-audit` - Audit pip dependencies
+
+**Run commands:**
+```bash
+http get https://api.example.com     # HTTPie example
+black .                             # Format Python
+ruff check .                        # Lint Python
+mypy module_name                    # Type check
+```
+
 ### All Tools at Once
 
 Combine multiple runtime installations:
@@ -148,6 +227,7 @@ docker run \
   -e "RUNTIME_AGENTS=claude gemini" \
   -e "RUNTIME_PLAYWRIGHT_BROWSERS=chromium firefox" \
   -e "RUNTIME_TESTING_TOOLS=vitest jest" \
+  -e "RUNTIME_PYTHON_TOOLS=black ruff mypy" \
   ghcr.io/rorar/vibe-kanban-docker:latest
 ```
 
@@ -186,8 +266,9 @@ docker run \
 
 | Path | Purpose |
 |------|---------|
-| `Dockerfile` | Node 22 LTS image with Codex, gh CLI, Docker CLI, build tools. |
+| `Dockerfile` | Node 22 LTS image with Codex, gh CLI, Docker CLI, build tools, and vibe coding utilities. |
 | `docker-compose.yml` | Wires up the Vibe service, volumes, and ports. |
+| `startup.sh` | Runtime tool installation script for agents, browsers, and Python tools. |
 | `examples/.env.example` | Optional environment overrides (tokens, git identity). |
 | `examples/Dockerfile.local.example` | Template for local-only Dockerfile overlay (copy → `Dockerfile.local`). |
 | `examples/docker-compose.local.yml.example` | Template for local Docker Compose overrides (copy → `docker-compose.local.yml`). |
@@ -274,13 +355,19 @@ The image digest changes on every update, enabling UnRAID's "Update Available" d
 A full UnRAID template is available at:
 https://raw.githubusercontent.com/rorar/unraid-templates/main/templates/vibe-kanban.xml
 
-Features:
+**Features:**
 - Web UI on port 8085
-- Persistent storage for data, cache, and worktrees
-- SSH keys and GitHub CLI config passthrough
+- Minimal path configuration (7 paths total):
+  - Project Data, Cache, Worktrees, Workspace
+  - SSH Keys, GitConfig, Docker Socket
+- All agent configs stored in `/mnt/user/appdata/vibe-kanban/data`
 - Docker-in-Docker support via socket mount
 - Configurable git author identity
-- Advanced API key configuration
+- All runtime tools pre-configured with defaults:
+  - Agents: claude, gemini, copilot, amp, cursor, opencode, droid, clauderouter, qwen
+  - Browsers: chromium, firefox, webkit
+  - Testing: vitest, jest, msw
+  - Python: httpie, black, ruff, mypy, pytest
 
 See the [unraid-templates repository](https://github.com/rorar/unraid-templates) for the latest version.
 
@@ -288,7 +375,41 @@ See the [unraid-templates repository](https://github.com/rorar/unraid-templates)
 
 ## 📚 References
 
+### Core
 - [Vibe Kanban Docs](https://www.vibekanban.com/docs/getting-started)
 - [OpenAI Codex CLI](https://developers.openai.com/codex/cli)
 - [GitHub CLI Manual](https://cli.github.com/manual/)
 - [Docker Compose](https://docs.docker.com/compose/)
+
+### Coding Agents
+- [Claude Code](https://code.claude.com)
+- [Gemini CLI](https://geminicli.com/docs)
+- [GitHub Copilot](https://docs.github.com/en/copilot)
+- [Amp Code](https://ampcode.com/manual)
+- [Cursor CLI](https://cursor.com/docs/cli)
+- [OpenCode](https://opencode.ai/docs)
+- [Qwen Code](https://qwenlm.github.io/qwen-code-docs)
+- [Claude Code Router](https://github.com/musistudio/claude-code-router)
+- [Droid](https://docs.factory.ai)
+
+### Development Tools
+- [ripgrep](https://github.com/BurntSushi/ripgrep)
+- [jq](https://jqlang.github.io/jq/)
+- [bat](https://github.com/sharkdp/bat)
+- [fd](https://github.com/sharkdp/fd)
+- [tldr pages](https://tldr.sh/)
+
+### Image Processing
+- [ImageMagick](https://imagemagick.org/)
+- [libvips](https://www.libvips.org/)
+- [librsvg](https://gitlab.gnome.org/World/Rsvg/rsvg)
+- [pngquant](https://pngquant.org/)
+- [WebP](https://developers.google.com/speed/webp/)
+- [SVGO](https://github.com/svg/svgo)
+
+### Python
+- [pipx](https://pipx.pypa.io/)
+- [Black](https://black.readthedocs.io/)
+- [Ruff](https://docs.astral.sh/ruff/)
+- [MyPy](https://mypy.readthedocs.io/)
+- [Pytest](https://docs.pytest.org/)

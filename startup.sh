@@ -11,7 +11,7 @@ echo "[startup] Checking for optional tools to install..."
 declare -A AGENT_MAP=(
     ["claude"]="@anthropic-ai/claude-code"
     ["gemini"]="@google/gemini-cli"
-    ["copilot"]="@githubnext/copilot-cli"
+    ["copilot"]="@github/copilot"
     ["amp"]="amp-code"
     ["cursor"]="@cursor/cli"
     ["opencode"]="@opencode-ai/cli"

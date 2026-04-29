@@ -53,6 +53,14 @@ RUN if [ -n "$PLAYWRIGHT_BROWSERS" ]; then \
        npx playwright install $PLAYWRIGHT_BROWSERS; \
     fi
 
+# Install testing tools for unit/integration testing (optional)
+# Set TESTING_TOOLS to install: vitest, jest, msw (space-separated)
+# Example: --build-arg TESTING_TOOLS="vitest jest msw"
+ARG TESTING_TOOLS=
+RUN if [ -n "$TESTING_TOOLS" ]; then \
+       npm install -g $TESTING_TOOLS; \
+    fi
+
 # Dedicated workspace for mounted repositories
 WORKDIR /work
 

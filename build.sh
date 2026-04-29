@@ -43,8 +43,12 @@ done
 # Build Playwright browsers string from .env variable
 PLAYWRIGHT_BROWSERS="${PLAYWRIGHT_BROWSERS:-}"
 
+# Build testing tools string from .env variable
+TESTING_TOOLS="${TESTING_TOOLS:-}"
+
 echo "Building with agents: ${AGENTS:-none (default Codex only)}"
 echo "Building with Playwright browsers: ${PLAYWRIGHT_BROWSERS:-none}"
+echo "Building with testing tools: ${TESTING_TOOLS:-none}"
 
 # Default to pushing if --push flag is provided
 PUSH_FLAG=""
@@ -56,6 +60,7 @@ fi
 DOCKER_BUILDKIT=1 docker build \
     --build-arg "CODING_AGENTS=$AGENTS" \
     --build-arg "PLAYWRIGHT_BROWSERS=$PLAYWRIGHT_BROWSERS" \
+    --build-arg "TESTING_TOOLS=$TESTING_TOOLS" \
     -t ghcr.io/rorar/vibe-kanban-docker:latest \
     -t ghcr.io/rorar/vibe-kanban-docker:local \
     $PUSH_FLAG \

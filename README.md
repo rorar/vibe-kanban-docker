@@ -151,6 +151,48 @@ npx playwright show-report       # View HTML report
 
 A multi-browser config template is available at `examples/playwright.config.ts.example`.
 
+### Unit & Integration Testing
+
+Install testing frameworks for unit and integration testing:
+
+```bash
+# Install Vitest for unit testing
+docker build --build-arg "TESTING_TOOLS=vitest" .
+
+# Install Vitest + Jest + MSW
+docker build --build-arg "TESTING_TOOLS=vitest jest msw" .
+```
+
+Or in docker-compose:
+```yaml
+build:
+  context: .
+  args:
+    TESTING_TOOLS: "vitest jest msw"
+```
+
+**Available tools:**
+- `vitest` - Fast Vite-native unit testing framework
+- `jest` - Classic unit testing framework
+- `msw` - Mock Service Worker for API mocking
+
+**Setup tests in your project:**
+```bash
+# Initialize Vitest
+npx vitest init
+# Copy example config
+cp examples/vitest.config.ts.example vitest.config.ts
+# Create tests directory
+mkdir tests
+```
+
+**Run tests:**
+```bash
+npx vitest run          # Run tests once
+npx vitest              # Watch mode
+npx vitest --coverage   # With coverage
+```
+
 ### OpenAI Codex
 
 1. Authenticate on the host (once):

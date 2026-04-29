@@ -34,7 +34,7 @@ check_network() {
 get_installed_npm_version() {
     local package="$1"
     npm list -g "$package" --depth=0 --json 2>/dev/null | \
-        grep -oP '"version":\s*"\K[^"]+' | head -1
+        rg '"version":\s*"([^"]+)"' -r '$1' | head -1
 }
 
 # Get latest npm package version from registry
@@ -170,7 +170,7 @@ check_and_install_cursor() {
     echo "[startup] Cursor not installed, installing..."
     HOME=/home/node \
     PATH=/home/node/.local/bin:$PATH \
-    curl -fsSL https://cursor.com/install | bash && echo "[startup] Cursor installed successfully"
+    curl -fsSL https://cursor.com/install | bash && echo "[startup] Cursor installed successfully" || echo "[startup] WARN: Failed to install Cursor"
 }
 
 # ============================================================================

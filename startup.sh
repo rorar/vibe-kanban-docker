@@ -74,6 +74,13 @@ if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
     install_tools "$TOOLS" "testing tool"
 fi
 
+# Install SVG tools from RUNTIME_SVG_TOOLS env var
+if [ -n "$RUNTIME_SVG_TOOLS" ]; then
+    TOOLS=$(normalize_list "$RUNTIME_SVG_TOOLS")
+    echo "[startup] Installing SVG tools: $TOOLS"
+    install_tools "$TOOLS" "SVG tool"
+fi
+
 echo "[startup] Tool installation complete."
 
 # Display welcome message with dynamic content based on installed tools
@@ -159,6 +166,14 @@ if [ -n "$RUNTIME_TESTING_TOOLS" ]; then
         echo "  - Run tests: npx jest"
     fi
 fi
+if [ -n "$RUNTIME_SVG_TOOLS" ]; then
+    echo ""
+    echo "SVG Tools:"
+    if echo "$RUNTIME_SVG_TOOLS" | grep -q "svgo"; then
+        echo "  - SVGO: npx svgo -i input.svg -o output.svg"
+        echo "  - Batch optimize: npx svgo -f ./svg/"
+    fi
+fi
 echo ""
 echo "Documentation:"
 echo "  - Vibe Kanban: https://vibekanban.com/docs"
@@ -180,6 +195,9 @@ if [ -n "$RUNTIME_AGENTS" ]; then
 fi
 if [ -n "$RUNTIME_PLAYWRIGHT_BROWSERS" ]; then
     echo "  - Playwright: https://playwright.dev/docs"
+fi
+if echo "$RUNTIME_SVG_TOOLS" | grep -q "svgo"; then
+    echo "  - SVGO: https://github.com/svg/svgo"
 fi
 if echo "$RUNTIME_TESTING_TOOLS" | grep -q "vitest"; then
     echo "  - Vitest: https://vitest.dev/guide"

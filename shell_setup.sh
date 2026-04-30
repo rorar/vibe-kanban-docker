@@ -121,6 +121,9 @@ fe() {
 export EDITOR="${EDITOR:-nano}"
 export VISUAL="${EDITOR:-nano}"
 
+# Enable True Color (24-bit) support for modern terminal apps
+export TERM=xterm-truecolor
+
 # Colors for less
 export LESS='-R'
 export LESS_TERMCAP_mb=$'\033[1;31m'

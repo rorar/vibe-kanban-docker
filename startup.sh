@@ -333,7 +333,7 @@ if [ -n "$RUNTIME_AGENTS_LIST" ]; then
             gemini)        echo "  - Gemini CLI: gemini" ;;
             copilot)       echo "  - GitHub Copilot: gh copilot" ;;
             amp)           echo "  - Amp: amp" ;;
-            cursor)        echo "  - Cursor: cursor" ;;
+            cursor)        echo "  - Cursor: cursor agent" ;;
             opencode)      echo "  - OpenCode: opencode" ;;
             droid)         echo "  - Droid: droid" ;;
             clauderouter)  echo "  - Claude Code Router: ccr" ;;

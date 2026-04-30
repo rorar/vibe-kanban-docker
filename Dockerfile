@@ -9,6 +9,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
        ca-certificates curl git bash openssh-client gnupg python3 python3-pip python3-venv make g++ unzip \
        tmux nano ripgrep jq tree bat fd-find man tldr \
+       zsh zsh-common bash-completion fzf htop btop tig git-delta thefuck \
        libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libpango-1.0-0 libcairo2 libasound2 libatspi2.0-0 \
        libx11-xcb1 libxcursor1 libgtk-3-0 libgdk-pixbuf2.0-0 \
        # WebKit browser dependencies
@@ -40,6 +41,10 @@ RUN apt-get update \
 # Install pipx for Python package isolation
 RUN pip3 install --break-system-packages pipx && pipx ensurepath
 
+# Install eza (modern ls alternative) and lazygit from GitHub releases
+RUN curl -fsSL https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz | tar xz -C /usr/local/bin \
+    && curl -fsSL https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_Linux_x86_64.tar.gz | tar xz -C /usr/local/bin
+
 # Create cache directories for runtime-installed tools (accessible by non-root user)
 RUN mkdir -p /home/node/.npm \
                /home/node/.cache/ms-playwright \
@@ -69,6 +74,10 @@ RUN npm install -g vibe-kanban@${VIBE_VERSION}
 # Copy startup script for runtime tool installation
 COPY startup.sh /usr/local/bin/startup.sh
 RUN chmod +x /usr/local/bin/startup.sh
+
+# Copy shell configuration
+COPY shell_setup.sh /etc/profile.d/shell_setup.sh
+RUN chmod +x /etc/profile.d/shell_setup.sh
 
 # Dedicated workspace for mounted repositories
 WORKDIR /work

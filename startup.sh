@@ -15,6 +15,11 @@ export PIPX_HOME=/home/node/.local/share/pipx
 export PIPX_BIN_DIR=/home/node/.local/bin
 export PATH="$PIPX_BIN_DIR:$PATH"
 
+# Source shell convenience configuration if available
+if [ -f /etc/profile.d/shell_setup.sh ]; then
+    . /etc/profile.d/shell_setup.sh
+fi
+
 # Link node_modules from persistent mount if exists (for cached installations)
 if [ -d "/home/node/npm-modules" ] && [ ! -L "/usr/local/lib/node_modules" ]; then
     ln -sf /home/node/npm-modules /usr/local/lib/node_modules 2>/dev/null || true

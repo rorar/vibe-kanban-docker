@@ -166,8 +166,8 @@ check_and_install_python() {
 # Usage: check_and_install_cursor
 check_and_install_cursor() {
     echo "[startup] Checking Cursor..."
-    # Cursor doesn't expose version API, so check if binary exists
-    if command -v cursor &> /dev/null; then
+    # Cursor CLI uses 'agent' as the main command, check for that
+    if command -v agent &> /dev/null; then
         echo "[startup] Cursor already installed"
         return
     fi

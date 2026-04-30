@@ -170,7 +170,12 @@ check_and_install_cursor() {
     echo "[startup] Cursor not installed, installing..."
     HOME=/home/node \
     PATH=/home/node/.local/bin:$PATH \
-    curl -fsSL https://cursor.com/install | bash && echo "[startup] Cursor installed successfully" || echo "[startup] WARN: Failed to install Cursor"
+    curl -fsSL https://cursor.com/install | bash && {
+        echo "[startup] Cursor installed successfully"
+        # Symlink to /usr/local/bin for global access (root/node user)
+        ln -sf /home/node/.local/bin/cursor /usr/local/bin/cursor
+        echo "[startup] Cursor symlinked to /usr/local/bin"
+    } || echo "[startup] WARN: Failed to install Cursor"
 }
 
 # ============================================================================

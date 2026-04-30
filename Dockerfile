@@ -79,6 +79,10 @@ RUN chmod +x /usr/local/bin/startup.sh
 COPY shell_setup.sh /etc/profile.d/shell_setup.sh
 RUN chmod +x /etc/profile.d/shell_setup.sh
 
+# Ensure aliases and tools load when using 'docker exec'
+RUN echo "source /etc/profile.d/shell_setup.sh" >> /root/.bashrc && \
+    echo "source /etc/profile.d/shell_setup.sh" >> /home/node/.bashrc
+
 # Dedicated workspace for mounted repositories
 WORKDIR /work
 

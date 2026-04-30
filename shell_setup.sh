@@ -23,6 +23,7 @@ alias gco='git checkout'
 alias gb='git branch'
 
 # Enable delta for git diff
+export DELTA_PAGER="less -R"
 git config --global core.pager delta
 git config --global delta.navigate true
 git config --global delta.side-by-side true
@@ -129,3 +130,11 @@ export LESS_TERMCAP_se=$'\033[0m'
 export LESS_TERMCAP_so=$'\033[1;44;33m'
 export LESS_TERMCAP_ue=$'\033[0m'
 export LESS_TERMCAP_us=$'\033[1;32m'
+
+# ============================================================================
+# The Fuck (Command Correction)
+# ============================================================================
+if command -v thefuck &> /dev/null; then
+    eval $(thefuck --alias)
+    eval $(thefuck --alias FUCK)
+fi

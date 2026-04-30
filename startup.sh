@@ -177,9 +177,15 @@ check_and_install_cursor() {
     PATH=/home/node/.local/bin:$PATH \
     curl -fsSL https://cursor.com/install | bash && {
         echo "[startup] Cursor installed successfully"
-        # Symlink to /usr/local/bin for global access (root/node user)
-        ln -sf /home/node/.local/bin/cursor /usr/local/bin/cursor
-        echo "[startup] Cursor symlinked to /usr/local/bin"
+        
+        # 1. Symlink the true binary ('agent') globally for root/node
+        ln -sf /home/node/.local/bin/agent /usr/local/bin/agent
+        
+        # 2. Create the convenience symlink so 'cursor' points directly to 'agent'
+        ln -sf /usr/local/bin/agent /usr/local/bin/cursor
+        
+        echo "[startup] Global 'agent' command created"
+        echo "[startup] Global 'cursor' symlink created (points to agent)"
     } || echo "[startup] WARN: Failed to install Cursor"
 }
 
@@ -333,7 +339,7 @@ if [ -n "$RUNTIME_AGENTS_LIST" ]; then
             gemini)        echo "  - Gemini CLI: gemini" ;;
             copilot)       echo "  - GitHub Copilot: gh copilot" ;;
             amp)           echo "  - Amp: amp" ;;
-            cursor)        echo "  - Cursor: cursor agent" ;;
+            cursor)        echo "  - Cursor: agent (or 'cursor')" ;;
             opencode)      echo "  - OpenCode: opencode" ;;
             droid)         echo "  - Droid: droid" ;;
             clauderouter)  echo "  - Claude Code Router: ccr" ;;

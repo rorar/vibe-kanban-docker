@@ -43,8 +43,8 @@ RUN pip3 install --break-system-packages pipx && pipx ensurepath
 
 # Install eza, delta, and lazygit from GitHub releases
 RUN curl -fsSL https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz | tar xz -C /usr/local/bin \
-    && curl -fsSL https://github.com/dandavison/delta/releases/latest/download/delta-musl-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin \
-    && curl -fsSL https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_Linux_x86_64.tar.gz | tar xz -C /usr/local/bin
+    && curl -fsSL https://github.com/dandavison/delta/releases/latest/download/delta-0.19.2-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin \
+    && curl -fsSL https://github.com/jesseduffield/lazygit/releases/download/v0.61.1/lazygit_0.61.1_linux_x86_64.tar.gz | tar xz -C /usr/local/bin
 
 # Create cache directories for runtime-installed tools (accessible by non-root user)
 RUN mkdir -p /home/node/.npm \

@@ -63,16 +63,24 @@ jobs:
 
       - name: Determine image tags
         id: tags
+        env:
+          META_TAGS: ${{ steps.meta.outputs.tags }}
+          CUSTOM_TAG: ${{ inputs.image-tag }}
         run: |
-          TAGS="${{ steps.meta.outputs.tags }}"
-          
+          TAGS="$META_TAGS"
+
           # Add custom tag if provided
-          if [ -n "${{ inputs.image-tag }}" ]; then
-            TAGS="$TAGS,ghcr.io/${{ env.IMAGE_NAME }}:${{ inputs.image-tag }}"
+          if [ -n "$CUSTOM_TAG" ]; then
+            TAGS="$TAGS"$'\n'"${REGISTRY}/${IMAGE_NAME}:${CUSTOM_TAG}"
           fi
-          
-          echo "tags=$TAGS" >> $GITHUB_OUTPUT
-          echo "full-image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
+
+          # TAGS holds one tag per line, so it needs the multiline output syntax
+          {
+            echo "tags<<EOF"
+            echo "$TAGS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "full-image=${REGISTRY}/${IMAGE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push with Docker Buildx
         uses: docker/build-push-action@v7
@@ -87,10 +95,13 @@ jobs:
             VERSION=${{ github.ref_name }}
 
       - name: Output image info
+        env:
+          FULL_IMAGE: ${{ steps.tags.outputs.full-image }}
+          TAGS: ${{ steps.tags.outputs.tags }}
         run: |
           echo "Image published successfully!"
-          echo "Image: ${{ steps.tags.outputs.full-image }}"
-          echo "Tags: ${{ steps.tags.outputs.tags }}"
+          echo "Image: $FULL_IMAGE"
+          echo "Tags: $TAGS"
           
       - name: Create deployment notification
         if: github.event_name == 'release'

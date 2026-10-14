@@ -42,9 +42,25 @@ RUN apt-get update \
 RUN pip3 install --break-system-packages pipx && pipx ensurepath
 
 # Install eza, delta, and lazygit from GitHub releases
-RUN curl -fsSL https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz | tar xz -C /usr/local/bin \
-    && curl -fsSL https://github.com/dandavison/delta/releases/latest/download/delta-0.19.2-x86_64-unknown-linux-musl.tar.gz | tar xz -C /usr/local/bin \
-    && curl -fsSL https://github.com/jesseduffield/lazygit/releases/download/v0.61.1/lazygit_0.61.1_linux_x86_64.tar.gz | tar xz -C /usr/local/bin
+# Versions are pinned: a versioned asset name under releases/latest/ returns 404
+# as soon as the project publishes a newer release.
+# TARGETARCH selects the matching binary for each platform of the multi-arch build.
+ARG TARGETARCH
+ARG EZA_VERSION=v0.23.5
+ARG DELTA_VERSION=0.19.2
+ARG LAZYGIT_VERSION=0.61.1
+RUN case "${TARGETARCH}" in \
+      amd64) EZA_ARCH=x86_64; DELTA_TARGET=x86_64-unknown-linux-musl; LAZYGIT_ARCH=x86_64 ;; \
+      arm64) EZA_ARCH=aarch64; DELTA_TARGET=aarch64-unknown-linux-gnu; LAZYGIT_ARCH=arm64 ;; \
+      *) echo "Unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac \
+    && curl -fsSL "https://github.com/eza-community/eza/releases/download/${EZA_VERSION}/eza_${EZA_ARCH}-unknown-linux-gnu.tar.gz" \
+       | tar xz -C /usr/local/bin \
+    && curl -fsSL "https://github.com/dandavison/delta/releases/download/${DELTA_VERSION}/delta-${DELTA_VERSION}-${DELTA_TARGET}.tar.gz" \
+       | tar xz -C /usr/local/bin --strip-components=1 "delta-${DELTA_VERSION}-${DELTA_TARGET}/delta" \
+    && curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_linux_${LAZYGIT_ARCH}.tar.gz" \
+       | tar xz -C /usr/local/bin lazygit \
+    && eza --version && delta --version && lazygit --version
 
 # Create cache directories for runtime-installed tools (accessible by non-root user)
 RUN mkdir -p /home/node/.npm \
